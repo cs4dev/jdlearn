@@ -167,6 +167,28 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
+# SPA routing WITHOUT a distribution-wide custom_error_response (which would also
+# rewrite the API's own 403/404 responses into index.html — breaking tRPC's JSON
+# parsing with "Unexpected token '<'"). Attached to the S3 default behavior ONLY;
+# /trpc/* and /api/* have their own behaviors, so their real status codes pass through.
+resource "aws_cloudfront_function" "spa_router" {
+  name    = "${local.name_prefix}-spa-router"
+  runtime = "cloudfront-js-2.0"
+  comment = "Extensionless (client-router) paths → /index.html; real static files (with an extension) hit S3 as-is."
+  publish = true
+  code    = <<-JS
+    function handler(event) {
+      var req = event.request;
+      var uri = req.uri;
+      var lastSegment = uri.substring(uri.lastIndexOf('/') + 1);
+      if (lastSegment.indexOf('.') === -1) {
+        req.uri = '/index.html';
+      }
+      return req;
+    }
+  JS
+}
+
 resource "aws_cloudfront_distribution" "web" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -202,6 +224,11 @@ resource "aws_cloudfront_distribution" "web" {
     cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
     compress               = true
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_router.arn
+    }
   }
 
   # /trpc/* → Lambda. No caching (auth'd, cookie-bearing batches); forward all viewer.
@@ -228,17 +255,9 @@ resource "aws_cloudfront_distribution" "web" {
     compress                 = true
   }
 
-  # SPA fallback — let the client router handle unknown paths.
-  custom_error_response {
-    error_code         = 403
-    response_code      = 200
-    response_page_path = "/index.html"
-  }
-  custom_error_response {
-    error_code         = 404
-    response_code      = 200
-    response_page_path = "/index.html"
-  }
+  # SPA fallback is handled by aws_cloudfront_function.spa_router on the default
+  # behavior (above) — NOT a distribution-wide custom_error_response, which would
+  # also swallow the API's 403/404 JSON errors and hand back index.html instead.
 
   restrictions {
     geo_restriction {
