@@ -17,6 +17,13 @@ _None._
 _None._
 
 ## Done
+- **T-017 — gate JD input on having a résumé** (2026-07-24, solo track, no SPEC change).
+  Signed-in users with no résumé could paste a JD and get a generic (non-personalized)
+  letter. `Generator.tsx` now queries `getResume`: `null` → the JD textarea card is
+  replaced with an "Add your résumé first" CTA card linking to `/resume` (skeleton while
+  pending); once a résumé exists the JD input renders as before. Client-only, no server/
+  SPEC change (`getResume` already existed). Gate PASS (--no-boot). Live no-résumé flow +
+  browser render are manual-verify.
 - **T-016 — Google sign-in** (2026-07-06, solo track, SPEC v7). Better Auth social provider:
   `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` env (server-only, R5); `auth.ts` adds
   `socialProviders.google` only when both are set. `AuthForm` gets an "or" divider +

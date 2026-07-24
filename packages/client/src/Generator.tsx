@@ -10,6 +10,7 @@ import {
   ModalHeader,
   Textarea,
 } from "@heroui/react";
+import { Link } from "@tanstack/react-router";
 import type { Application } from "@jdlearn/shared";
 import { trpc } from "./trpc";
 import { BundleView } from "./BundleView";
@@ -20,6 +21,7 @@ export function Generator() {
   const [viewing, setViewing] = useState<Application | null>(null);
   const [toDelete, setToDelete] = useState<Application | null>(null);
   const utils = trpc.useUtils();
+  const resume = trpc.getResume.useQuery();
   const past = trpc.listApplications.useQuery();
   const generate = trpc.generate.useMutation({
     onSuccess: (app) => {
@@ -44,6 +46,29 @@ export function Generator() {
 
   return (
     <div className="space-y-8">
+      {resume.isPending ? (
+        <RowsSkeleton />
+      ) : !resume.data ? (
+        <Card className="border border-indigo-100 bg-indigo-50/40" shadow="sm">
+          <CardBody className="items-start gap-3 p-5">
+            <h2 className="text-lg font-semibold text-gray-900">Add your résumé first</h2>
+            <p className="text-sm text-gray-500">
+              Your cover letter and fit map are built from your real experience. Add a
+              résumé — build it or import a PDF, Word, or Markdown file — before pasting a
+              job description.
+            </p>
+            <Button
+              as={Link}
+              to="/resume"
+              color="primary"
+              className="font-medium"
+              endContent={<span aria-hidden>→</span>}
+            >
+              Add your résumé
+            </Button>
+          </CardBody>
+        </Card>
+      ) : (
       <Card className="border border-gray-100" shadow="sm">
         <CardBody className="gap-4 p-5">
           <Textarea
@@ -79,6 +104,7 @@ export function Generator() {
           )}
         </CardBody>
       </Card>
+      )}
 
       {viewing && (
         <div className="space-y-3">
