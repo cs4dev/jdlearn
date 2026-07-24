@@ -71,9 +71,13 @@ data "aws_iam_policy_document" "deploy_assume" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      # Lock to repo + branch. Other branches/forks/tags can't assume this role.
+      # Lock to this repo. Two patterns cover both GitHub OIDC subject formats:
+      # the legacy plain "repo:org/repo:..." and the newer immutable-ID form
+      # "repo:org@<orgId>/repo@<repoId>:..." that GitHub now injects. Wildcard on the
+      # ref allows any trigger (push, workflow_run, workflow_dispatch) from this repo.
       values = [
-        "repo:${var.github_repo}:ref:refs/heads/${var.github_branch}",
+        "repo:${var.github_repo}:*",
+        "repo:${split("/", var.github_repo)[0]}@*/${split("/", var.github_repo)[1]}@*:*",
       ]
     }
   }
