@@ -82,7 +82,7 @@ resource "aws_lambda_function" "http" {
   runtime          = "nodejs22.x"
   filename         = local.http_zip
   source_code_hash = filebase64sha256(local.http_zip)
-  timeout          = 30 # Anthropic generation (cover letter + plan) can run long.
+  timeout          = 60 # Anthropic (Opus) generation of fit analysis + cover letter + plan runs long.
   memory_size      = 512
 
   environment {
@@ -213,6 +213,9 @@ resource "aws_cloudfront_distribution" "web" {
       https_port             = 443
       origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
+      # Opus generation exceeds the 30s default; 60s is the CloudFront ceiling
+      # without a service-quota increase. Kept in sync with the Lambda timeout.
+      origin_read_timeout = 60
     }
   }
 
