@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tfstate*
+.terraform/
+.terraform.lock.hcl
+.env
+*.log
+.DS_Store
+data/apps/
+.vite/
+coverage/

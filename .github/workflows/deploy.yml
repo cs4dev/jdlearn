@@ -1,0 +1,125 @@
+name: Deploy
+
+# Runs only after the harness-gate workflow succeeds on main. Manual dispatch too.
+on:
+  workflow_run:
+    workflows: [harness-gate]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write # OIDC role assumption
+  contents: read
+
+env:
+  AWS_REGION: ap-southeast-1
+  TF_VERSION: 1.10.5
+  NODE_VERSION: "22"
+
+jobs:
+  infra:
+    name: Build api + terraform apply
+    runs-on: ubuntu-latest
+    # Gate the workflow_run trigger on the gate actually passing (workflow_dispatch has no run).
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      web_url: ${{ steps.outputs.outputs.web_url }}
+      web_bucket: ${{ steps.outputs.outputs.web_bucket }}
+      cf_distribution_id: ${{ steps.outputs.outputs.cf_distribution_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build api lambda bundle
+        run: pnpm --filter @jdlearn/server build:lambda
+
+      - name: Terraform init
+        working-directory: infra
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TFSTATE_BUCKET }}" \
+            -backend-config="key=jdlearn/prod/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="use_lockfile=true" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform apply
+        working-directory: infra
+        env:
+          TF_VAR_env: prod
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+          TF_VAR_web_domain: ${{ vars.WEB_DOMAIN }}
+          TF_VAR_route53_zone_name: ${{ vars.ROUTE53_ZONE_NAME }}
+          TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
+          TF_VAR_auth_secret: ${{ secrets.AUTH_SECRET }}
+          TF_VAR_anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          TF_VAR_google_client_id: ${{ vars.GOOGLE_CLIENT_ID }}
+          TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        run: terraform apply -auto-approve
+
+      - id: outputs
+        working-directory: infra
+        run: |
+          {
+            echo "web_url=$(terraform output -raw web_url)"
+            echo "web_bucket=$(terraform output -raw web_bucket)"
+            echo "cf_distribution_id=$(terraform output -raw cf_distribution_id)"
+          } >> "$GITHUB_OUTPUT"
+
+  web:
+    name: Build + deploy web to CloudFront
+    needs: infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      # The client calls the API at the relative path /trpc (same-origin via CloudFront),
+      # so no API base URL is baked into the bundle.
+      - name: Build web
+        run: pnpm --filter @jdlearn/client build
+
+      - name: Sync to S3
+        run: |
+          # Hashed assets — immutable long cache. index.html — no cache so deploys land.
+          aws s3 sync packages/client/dist "s3://${{ needs.infra.outputs.web_bucket }}" \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html"
+          aws s3 cp packages/client/dist/index.html "s3://${{ needs.infra.outputs.web_bucket }}/index.html" \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ needs.infra.outputs.cf_distribution_id }}" \
+            --paths "/*"
+
+      - name: Print web URL
+        run: echo "Deployed ${{ needs.infra.outputs.web_url }}"

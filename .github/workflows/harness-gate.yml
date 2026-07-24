@@ -1,0 +1,23 @@
+# Harness gate in CI. CI defines NO checks of its own — it sets up the toolchain and
+# runs the SAME master gate as local dev. The B2 boot probes /api/health, which needs
+# no database (Mongo is lazy), so CI needs no service containers for v1.
+name: harness-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Master validation gate
+        run: bash harness/validate.sh

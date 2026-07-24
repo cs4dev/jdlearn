@@ -1,0 +1,19 @@
+{
+  "name": "heymax-miles-ledger",
+  "version": "1.0.0",
+  "description": "Max Miles rewards ledger API demo for HeyMax",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/server.js",
+    "test": "tsc && node --test dist/ledger.test.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.30",
+    "typescript": "^5.4.5"
+  }
+}

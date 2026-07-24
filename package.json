@@ -1,0 +1,27 @@
+{
+  "name": "jdlearn",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "typecheck": "pnpm -r --parallel typecheck",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "build": "pnpm --filter @jdlearn/client build",
+    "dev": "pnpm dev:server & pnpm dev:client",
+    "dev:server": "dotenv -- pnpm --filter @jdlearn/server dev",
+    "dev:client": "pnpm --filter @jdlearn/client dev"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "dotenv-cli": "^7.4.4",
+    "eslint": "^9.17.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

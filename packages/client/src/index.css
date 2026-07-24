@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@plugin "./hero.ts";
+@source "../../../node_modules/@heroui/theme/dist/**/*.{js,ts}";
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900;
+    background-image: radial-gradient(55rem 40rem at 50% -16rem, theme(colors.indigo.100), transparent);
+    min-height: 100vh;
+  }
+}
