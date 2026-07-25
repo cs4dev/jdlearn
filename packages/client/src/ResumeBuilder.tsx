@@ -22,7 +22,7 @@ const EMPTY: Resume = {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">{children}</h3>
+    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">{children}</h3>
   );
 }
 
@@ -189,7 +189,7 @@ export function ResumeBuilder() {
                 + Add
               </Button>
             </div>
-            {r.experience.length === 0 && <p className="text-sm text-gray-400">No roles yet.</p>}
+            {r.experience.length === 0 && <p className="text-sm text-gray-500">No roles yet.</p>}
             {r.experience.map((e, i) => (
               <div key={i} className="space-y-3 rounded-xl border border-gray-100 p-4">
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -223,7 +223,7 @@ export function ResumeBuilder() {
                 + Add
               </Button>
             </div>
-            {r.education.length === 0 && <p className="text-sm text-gray-400">Nothing yet.</p>}
+            {r.education.length === 0 && <p className="text-sm text-gray-500">Nothing yet.</p>}
             {r.education.map((ed, i) => (
               <div key={i} className="space-y-3 rounded-xl border border-gray-100 p-4">
                 <div className="grid gap-3 sm:grid-cols-2">

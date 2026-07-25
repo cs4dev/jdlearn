@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-25T00:00:00.000Z",
+  "title": "Design System: jdlearn",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Desk Indigo", "canonical": "#4f46e5", "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#a5b4fc", "#e0e7ff"] },
+      "verdict-match": { "role": "tertiary", "displayName": "Match Green", "canonical": "#17c964", "tonalRamp": ["#052e16", "#0b5e2f", "#0f7a3d", "#12a150", "#17c964", "#45d483", "#8ee8b0", "#d1f5df"] },
+      "verdict-partial": { "role": "tertiary", "displayName": "Partial Amber", "canonical": "#f5a524", "tonalRamp": ["#3f2a04", "#6b4708", "#94640c", "#c88a12", "#f5a524", "#f7b955", "#facd8b", "#fde9cc"] },
+      "verdict-gap": { "role": "tertiary", "displayName": "Gap Red", "canonical": "#f31260", "tonalRamp": ["#4a0620", "#7a0c34", "#a81147", "#d0125a", "#f31260", "#f65a92", "#fa9cbe", "#fddce8"] },
+      "page": { "role": "neutral", "displayName": "Warm Page Gray", "canonical": "#f9fafb", "tonalRamp": ["#111827", "#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#e5e7eb", "#f9fafb"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Landing hero only — 'Turn a job post into proof.'" },
+      "label": { "displayName": "Tracked Label", "purpose": "The signature: uppercase 12px wide-tracked section labels and the indigo role eyebrow." },
+      "mono": { "displayName": "JD Mono", "purpose": "Raw job-description paste area only." }
+    },
+    "shadows": [
+      { "name": "rest-lift", "value": "0 1px 2px rgba(17,24,39,0.06), 0 1px 3px rgba(17,24,39,0.04)", "purpose": "The only ambient shadow — top-level document cards and the logo coin. Nested surfaces get border only." }
+    ],
+    "gradients": [
+      { "name": "identity", "value": "linear-gradient(135deg, #6366f1, #8b5cf6)", "purpose": "Logo tile and landing perk-icon coins only. Never on UI chrome." },
+      { "name": "page-glow", "value": "radial-gradient(55rem 40rem at 50% -16rem, #e0e7ff, transparent)", "purpose": "The single atmospheric element — a soft indigo overhead glow (the desk lamp) on the flat gray page." }
+    ],
+    "motion": [
+      { "name": "state", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default HeroUI easing for button/hover/color state transitions (~150-200ms)." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one high-emphasis action per view (Generate, Sign in). Forward actions trail a → motif.",
+      "html": "<button class=\"ds-btn-primary\">Generate <span aria-hidden=\"true\">&rarr;</span></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #4f46e5; color: #fff; font: 500 0.875rem ui-sans-serif, system-ui, sans-serif; height: 40px; padding: 0 16px; border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s cubic-bezier(0.4,0,0.2,1), transform 0.15s; } .ds-btn-primary:hover { background: #4338ca; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }"
+    },
+    {
+      "name": "Flat Button",
+      "kind": "button",
+      "refersTo": "button-flat",
+      "description": "Secondary in-context action (Copy, Edit, Regenerate) — indigo on an indigo wash.",
+      "html": "<button class=\"ds-btn-flat\">Copy</button>",
+      "css": ".ds-btn-flat { background: #e0e7ff; color: #4f46e5; font: 500 0.875rem ui-sans-serif, system-ui, sans-serif; height: 32px; padding: 0 12px; border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s cubic-bezier(0.4,0,0.2,1); } .ds-btn-flat:hover { background: #c7d2fe; } .ds-btn-flat:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }"
+    },
+    {
+      "name": "Bordered Button",
+      "kind": "button",
+      "refersTo": "button-bordered",
+      "description": "Neutral alternate action (Continue with Google) — white with a hairline border.",
+      "html": "<button class=\"ds-btn-bordered\"><span class=\"ds-g\">G</span> Continue with Google</button>",
+      "css": ".ds-btn-bordered { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: #1f2937; font: 500 0.875rem ui-sans-serif, system-ui, sans-serif; height: 40px; padding: 0 16px; border: 1px solid #e5e7eb; border-radius: 12px; cursor: pointer; transition: border-color 0.15s, background 0.15s; } .ds-btn-bordered:hover { background: #f9fafb; border-color: #d1d5db; } .ds-g { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 9999px; background: #fff; color: #4285F4; font-weight: 700; box-shadow: 0 0 0 1px #e5e7eb; }"
+    },
+    {
+      "name": "Bordered Input",
+      "kind": "input",
+      "refersTo": "input-bordered",
+      "description": "HeroUI bordered field with an outside label; indigo focus ring.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Email</span><input class=\"ds-input\" type=\"email\" placeholder=\"you@example.com\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field-label { font: 400 0.875rem ui-sans-serif, system-ui, sans-serif; color: #4b5563; } .ds-input { font: 400 0.9375rem ui-sans-serif, system-ui, sans-serif; color: #111827; padding: 10px 12px; background: #fff; border: 2px solid #e5e7eb; border-radius: 12px; transition: border-color 0.15s; } .ds-input::placeholder { color: #9ca3af; } .ds-input:hover { border-color: #d1d5db; } .ds-input:focus { outline: none; border-color: #4f46e5; }"
+    },
+    {
+      "name": "Section Label",
+      "kind": "custom",
+      "refersTo": "typography.label",
+      "description": "The system's typographic signature — uppercase wide-tracked 12px label introducing every section.",
+      "html": "<h3 class=\"ds-section-label\">Fit for this role</h3>",
+      "css": ".ds-section-label { font: 600 0.75rem ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin: 0 0 12px; }"
+    },
+    {
+      "name": "Fit Verdict Row",
+      "kind": "card",
+      "refersTo": "chip-verdict",
+      "description": "The signature component: a fixed-width verdict chip paired with a JD requirement and its résumé evidence.",
+      "html": "<div class=\"ds-fit-row\"><span class=\"ds-chip ds-chip-match\">Match</span><div class=\"ds-fit-body\"><p class=\"ds-fit-req\">5+ years building React applications</p><p class=\"ds-fit-ev\">Led the React 19 migration at Acme across 40+ screens.</p></div></div>",
+      "css": ".ds-fit-row { display: flex; gap: 12px; align-items: flex-start; background: #fff; border: 1px solid #f3f4f6; border-radius: 14px; padding: 16px; } .ds-chip { flex-shrink: 0; width: 64px; text-align: center; font: 500 0.75rem ui-sans-serif, system-ui, sans-serif; padding: 4px 0; border-radius: 9999px; margin-top: 2px; } .ds-chip-match { background: #d1f5df; color: #0f7a3d; } .ds-fit-body { display: flex; flex-direction: column; gap: 2px; } .ds-fit-req { font: 500 0.875rem ui-sans-serif, system-ui, sans-serif; color: #111827; margin: 0; } .ds-fit-ev { font: 400 0.875rem ui-sans-serif, system-ui, sans-serif; color: #4b5563; margin: 0; }"
+    },
+    {
+      "name": "Learning-Plan Coin",
+      "kind": "custom",
+      "refersTo": "colors.tint-100",
+      "description": "Numbered ordered-step marker — sequence made tactile with a full-round indigo coin.",
+      "html": "<div class=\"ds-step\"><span class=\"ds-coin\">1</span><div><p class=\"ds-step-title\">Ship a typed tRPC endpoint</p><p class=\"ds-step-detail\">Close the API-design gap the JD asks for.</p></div></div>",
+      "css": ".ds-step { display: flex; gap: 12px; align-items: flex-start; } .ds-coin { flex-shrink: 0; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 9999px; background: #e0e7ff; color: #4338ca; font: 600 0.75rem ui-sans-serif, system-ui, sans-serif; margin-top: 2px; } .ds-step-title { font: 500 0.9375rem ui-sans-serif, system-ui, sans-serif; color: #111827; margin: 0; } .ds-step-detail { font: 400 0.875rem ui-sans-serif, system-ui, sans-serif; color: #4b5563; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Evidence Desk",
+    "overview": "jdlearn is a workspace for turning a claim into proof. The visitor arrives with a job description and a history, and the interface's whole job is to lay the two side by side and render a verdict — match, partial, gap — then build the paperwork from it. So the surface behaves like a calm analyst's desk: a single centered column of white document-surfaces on a soft gray page, warmed by one faint indigo glow bleeding down from above the fold, as if a desk lamp were on. Nothing shouts. This is an Operate surface: the user is completing a task under application-fatigue pressure, so scanability and trust outrank expression. Density is generous, not cramped; hierarchy is carried by weight and an uppercase micro-label rather than by boxes and rules. The palette is deliberately narrow: one indigo accent, a full gray neutral ramp, and three semantic verdict colors that appear only on fit chips. Color is evidence here, not decoration.",
+    "keyCharacteristics": [
+      "Single centered document column on a warm-gray page with one indigo overhead glow.",
+      "Flat by default: hairline borders (#f3f4f6) do the work shadows usually do.",
+      "One indigo accent + full gray ramp; verdict colors reserved for fit judgments.",
+      "Hierarchy from weight + uppercase tracked micro-labels, not from heavy containers.",
+      "Quiet, system-font typography; monospace only where the user pastes raw JD text."
+    ],
+    "rules": [
+      { "name": "The Evidence-Only Color Rule", "body": "Green, amber, and red appear only as a fit verdict or a system error — never as decoration, category tags, or emphasis.", "section": "colors" },
+      { "name": "The One-Accent Rule", "body": "Indigo is the sole brand hue. Don't introduce a second decorative accent; reach for weight, size, or a gray step before reaching for a new color.", "section": "colors" },
+      { "name": "The Tracked-Label Rule", "body": "Every section is introduced by an uppercase, wide-tracked, 12px label in Faint gray (or indigo for the role eyebrow) — never by a bold sentence-case heading.", "section": "typography" },
+      { "name": "The Hairline-First Rule", "body": "To separate two surfaces, add a #f3f4f6 border before you add a shadow. Nested surfaces get border only. A second stacked shadow is a smell — flatten it.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do introduce every section with the uppercase, wide-tracked 12px Faint label (The Tracked-Label Rule).",
+      "Do reach for a hairline #f3f4f6 border before a shadow; give nested surfaces border only (The Hairline-First Rule).",
+      "Do keep indigo as the sole brand accent and let gray weight carry hierarchy (The One-Accent Rule).",
+      "Do trail forward/primary actions with the → motif, and swap button labels to a present-tense gerund while loading.",
+      "Do keep the single centered column and the one overhead indigo glow; add breathing room on the 32px section rhythm.",
+      "Do set raw JD input in monospace; keep everything else in the system sans."
+    ],
+    "donts": [
+      "Don't use green, amber, or red for anything but a fit verdict or a system error (The Evidence-Only Color Rule).",
+      "Don't stack shadows or box every section — flat, bordered surfaces are the identity.",
+      "Don't introduce a web font or a second decorative accent color; the neutrality is intentional.",
+      "Don't replace a tracked micro-label with a bold sentence-case heading.",
+      "Don't widen the app past its centered reading column into a full-bleed dashboard grid."
+    ]
+  }
+}

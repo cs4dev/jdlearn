@@ -84,7 +84,7 @@ export function Archived() {
                       className="flex-1 py-3 text-left"
                     >
                       <p className="font-medium text-gray-900">{a.bundle.roleTitle}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-500">
                         Deleted {a.deletedAt ? new Date(a.deletedAt).toLocaleString() : "—"}
                       </p>
                     </button>
@@ -112,7 +112,7 @@ export function Archived() {
             {viewing && <BundleView app={viewing} />}
           </div>
         ) : (
-          <p className="text-sm text-gray-400">Nothing archived.</p>
+          <p className="text-sm text-gray-500">Nothing archived.</p>
         )}
       </main>
 

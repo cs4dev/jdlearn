@@ -29,9 +29,12 @@ packages/
   (prompt; takes optional résumé), `resume-parse.ts` (PDF/DOCX → text via unpdf/mammoth →
   Claude → `Resume`), `trpc.ts` (router; AppRouter type export), `index.ts`
   (Fastify boot + `/api/health`). Anthropic SDK lives only here (R5).
-- **client/src** — `main.tsx` (router + tRPC + query providers), `Home.tsx` (landing +
-  JD input), `Generator.tsx` (gates the JD input on `getResume` — no résumé → CTA to
-  `/resume`), `BundleView.tsx`, `Archived.tsx`, `ResumeBuilder.tsx`
+- **client/src** — `main.tsx` (router + tRPC + query providers), `Home.tsx` (landing:
+  hero + sample fit map + auth, or the signed-in JD input), `Generator.tsx` (gates the JD
+  input on `getResume` — no résumé → CTA to `/resume`; `BundleSkeleton` + staged status
+  during generation), `BundleView.tsx`, `FitMap.tsx` (the shared JD↔résumé fit map —
+  score + verdict rows — rendered by both `BundleView` and `Home`'s landing sample so the
+  demo can't drift from the real result), `Archived.tsx`, `ResumeBuilder.tsx`
   (`/resume`), `NotFound.tsx`, `Header.tsx`, `Logo.tsx`, `Skeletons.tsx`, `trpc.ts`
   (typed client, type-only server import).
 

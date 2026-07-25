@@ -1,17 +1,57 @@
-import { Button } from "@heroui/react";
+import { Button, Card, CardBody } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
+import type { FitAnalysis } from "@jdlearn/shared";
 import { authClient } from "./auth";
 import { trpc } from "./trpc";
 import { AuthForm } from "./AuthForm";
+import { FitMap } from "./FitMap";
 import { Generator } from "./Generator";
 import { Header } from "./Header";
 import { PageSkeleton } from "./Skeletons";
 
-const PERKS = [
-  ["📄", "Your résumé", "build it or upload a PDF, Word, or Markdown file — the letter uses your real experience"],
-  ["📝", "Cover letter", "tailored to the role, editable, ready to copy and send"],
-  ["🎯", "Learning plan", "ordered steps to close the JD's gaps"],
-] as const;
+// The landing's proof: a real-shaped fit map on a made-up role, rendered by the SAME
+// FitMap component the bundle uses, so the demo can't drift from the actual result.
+// The isExample badge marks it so it can't be mistaken for the visitor's own score.
+const SAMPLE_FIT: FitAnalysis = {
+  overallFit: 82,
+  summary:
+    "Strong on React and TypeScript; the one real gap is Kubernetes — which the learning plan tackles first.",
+  requirements: [
+    {
+      text: "5+ years building production React apps",
+      status: "match",
+      evidence: "Led the React 19 migration across 40+ screens at Northwind.",
+      gapNote: "",
+    },
+    {
+      text: "GraphQL API design",
+      status: "partial",
+      evidence: "Shipped REST endpoints; some Apollo Client on the side.",
+      gapNote: "",
+    },
+    {
+      text: "Kubernetes in production",
+      status: "gap",
+      evidence: "",
+      gapNote: "No direct Kubernetes experience yet — first step of the learning plan.",
+    },
+  ],
+};
+
+function SampleFitMap() {
+  return (
+    <Card className="border border-gray-100" shadow="sm">
+      <CardBody className="p-6">
+        <FitMap
+          fit={SAMPLE_FIT}
+          subtitle="Senior Frontend Engineer"
+          isExample
+          headingLevel={2}
+        />
+      </CardBody>
+    </Card>
+  );
+}
 
 export function Home() {
   const { data: session, isPending } = authClient.useSession();
@@ -45,7 +85,7 @@ export function Home() {
       ) : session ? (
         <main className="mx-auto max-w-3xl px-6 pb-20">
           <section className="py-8">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <h1 className="text-2xl font-bold tracking-tight">
               Turn a job post into proof.
             </h1>
             <p className="mt-3 max-w-xl text-gray-500">
@@ -55,35 +95,25 @@ export function Home() {
           <Generator />
         </main>
       ) : (
-        <main className="mx-auto grid max-w-4xl content-start items-stretch gap-10 px-6 pb-20 pt-6 md:grid-cols-2 md:gap-8">
-          <section className="text-center md:text-left">
+        <main className="mx-auto max-w-4xl px-6 pb-24 pt-6">
+          <section className="mx-auto max-w-2xl text-center">
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-              Turn a job post into{" "}
-              <span className="text-indigo-600">proof.</span>
+              Turn a job post into <span className="text-indigo-600">proof.</span>
             </h1>
-            <p className="mt-4 text-lg text-gray-500">
-              Upload your résumé, paste a job description, and get a tailored cover
-              letter and a focused learning plan to close the gaps the role asks for.
+            <p className="mx-auto mt-4 max-w-xl text-lg text-gray-600">
+              Add your résumé — build it or import a PDF, Word, or Markdown file — then
+              paste a job description and get a tailored cover letter and a focused
+              learning plan to close the gaps the role asks for.
             </p>
-            <ul className="mt-8 space-y-4">
-              {PERKS.map(([icon, title, desc]) => (
-                <li
-                  key={title}
-                  className="flex items-center justify-center gap-3 md:justify-start"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-base shadow-sm">
-                    {icon}
-                  </span>
-                  <p className="text-left text-gray-500">
-                    <span className="font-semibold text-gray-900">{title}</span> — {desc}
-                  </p>
-                </li>
-              ))}
-            </ul>
           </section>
 
-          <div className="flex h-full justify-center md:justify-end">
-            <AuthForm />
+          {/* Proof + form share one row so both cards align at the same top edge.
+              On mobile the grid stacks: fit map (proof) above the form. */}
+          <div className="mt-12 grid gap-8 md:grid-cols-2 md:gap-12">
+            <SampleFitMap />
+            <div className="flex justify-center">
+              <AuthForm initialMode="signup" />
+            </div>
           </div>
         </main>
       )}

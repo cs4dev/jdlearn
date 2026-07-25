@@ -1,20 +1,9 @@
 import { useState } from "react";
 import Markdown from "react-markdown";
-import { Button, Card, CardBody, Chip, Divider, Textarea } from "@heroui/react";
-import type { Application, FitRequirement } from "@jdlearn/shared";
+import { Button, Card, CardBody, Divider, Textarea } from "@heroui/react";
+import type { Application } from "@jdlearn/shared";
 import { trpc } from "./trpc";
-
-const FIT_STATUS: Record<
-  FitRequirement["status"],
-  { label: string; color: "success" | "warning" | "danger" }
-> = {
-  match: { label: "Match", color: "success" },
-  partial: { label: "Partial", color: "warning" },
-  gap: { label: "Gap", color: "danger" },
-};
-
-// Strongest fit first: match → partial → gap.
-const FIT_ORDER: Record<FitRequirement["status"], number> = { match: 0, partial: 1, gap: 2 };
+import { FitMap } from "./FitMap";
 
 // Minimal element styling (no typography plugin installed) — cover letters are
 // paragraphs + emphasis + the occasional list.
@@ -36,7 +25,7 @@ const MD_COMPONENTS = {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
       {children}
     </h3>
   );
@@ -85,58 +74,14 @@ export function BundleView({
     <Card className="border border-gray-100" shadow="sm">
       <CardBody className="gap-8 p-6">
         <div>
-          <p className="text-xs uppercase tracking-wider text-indigo-500">Tailored for</p>
+          <p className="text-xs uppercase tracking-wider text-indigo-600">Tailored for</p>
           <h2 className="text-2xl font-bold tracking-tight">{bundle.roleTitle}</h2>
         </div>
 
         <Divider />
 
         {/* Fit map — the JD↔résumé connection. Guarded: pre-v4 stored bundles lack it. */}
-        {bundle.fitAnalysis && (
-          <section>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <SectionLabel>Fit for this role</SectionLabel>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-indigo-600">
-                  {bundle.fitAnalysis.overallFit}
-                </span>
-                <span className="text-sm text-gray-400">/ 100</span>
-              </div>
-            </div>
-            <p className="mb-4 text-sm text-gray-600">{bundle.fitAnalysis.summary}</p>
-            <ul className="space-y-3">
-              {[...bundle.fitAnalysis.requirements]
-                .sort((a, b) => FIT_ORDER[a.status] - FIT_ORDER[b.status])
-                .map((req, i) => {
-                const s = FIT_STATUS[req.status];
-                return (
-                  <li key={i}>
-                    <Card className="border border-gray-100" shadow="none">
-                      <CardBody className="flex flex-row gap-3 p-4">
-                        <Chip
-                          size="sm"
-                          variant="flat"
-                          color={s.color}
-                          classNames={{
-                            base: "mt-0.5 w-16 max-w-none shrink-0 justify-center",
-                            content: "w-full px-0 text-center",
-                          }}
-                        >
-                          {s.label}
-                        </Chip>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{req.text}</p>
-                          {req.evidence && <p className="text-sm text-gray-600">{req.evidence}</p>}
-                          {req.gapNote && <p className="text-sm text-gray-500">{req.gapNote}</p>}
-                        </div>
-                      </CardBody>
-                    </Card>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
+        {bundle.fitAnalysis && <FitMap fit={bundle.fitAnalysis} />}
 
         <section>
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -208,7 +153,7 @@ export function BundleView({
                   <p className="font-medium">
                     {s.title}
                     {s.estimateHours ? (
-                      <span className="ml-2 text-xs font-normal text-gray-400">
+                      <span className="ml-2 text-xs font-normal text-gray-500">
                         ~{s.estimateHours}h
                       </span>
                     ) : null}
