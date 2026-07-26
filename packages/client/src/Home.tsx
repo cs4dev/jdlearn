@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button, Card, CardBody } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import type { FitAnalysis } from "@jdlearn/shared";
@@ -53,10 +54,23 @@ function SampleFitMap() {
   );
 }
 
+// Marks that a session existed on this device, so returning users still see a skeleton
+// while the session revalidates — but fresh visitors don't wait on it for content that
+// needs no auth. ponytail: the session cookie is httpOnly, so JS can't read it directly.
+const SEEN_SESSION = "jdlearn.hasSession";
+
 export function Home() {
   const { data: session, isPending } = authClient.useSession();
   const archived = trpc.listArchived.useQuery(undefined, { enabled: !!session });
   const hasArchived = (archived.data?.length ?? 0) > 0;
+
+  // Only gate the landing on the session round-trip when we have reason to believe one
+  // exists. Fresh visitors see the landing immediately instead of a pointless skeleton.
+  const maybeSignedIn = localStorage.getItem(SEEN_SESSION) !== null;
+  useEffect(() => {
+    if (session) localStorage.setItem(SEEN_SESSION, "1");
+    else if (!isPending) localStorage.removeItem(SEEN_SESSION);
+  }, [session, isPending]);
 
   return (
     <div className="min-h-screen">
@@ -80,7 +94,7 @@ export function Home() {
         }
       />
 
-      {isPending ? (
+      {isPending && maybeSignedIn ? (
         <PageSkeleton />
       ) : session ? (
         <main className="mx-auto max-w-3xl px-6 pb-20">
