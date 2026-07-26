@@ -17,6 +17,15 @@ _None._
 _None._
 
 ## Done
+- **T-018 — kill the pointless first-load skeleton** (2026-07-26, solo track, no SPEC
+  change). The whole landing (hero, sample fit map, auth form) is static and needs no
+  session, yet `Home.tsx` gated it behind `<PageSkeleton/>` until `authClient.useSession()`
+  resolved — a fresh visitor waited on a session round-trip (worst against a cold Lambda)
+  for content that needs no auth, then the page popped in. Now the skeleton shows only when
+  a session is plausible: a `jdlearn.hasSession` localStorage flag (set when a session
+  resolves, cleared when it resolves to none — covers sign-out). Fresh visitors render the
+  landing immediately; returning users still skeleton-then-app with no logged-out flash.
+  httpOnly session cookie can't be read from JS, hence the flag. Full gate `VALIDATION: PASS`.
 - **T-017 — gate JD input on having a résumé** (2026-07-24, solo track, no SPEC change).
   Signed-in users with no résumé could paste a JD and get a generic (non-personalized)
   letter. `Generator.tsx` now queries `getResume`: `null` → the JD textarea card is
