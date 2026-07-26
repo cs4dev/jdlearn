@@ -31,7 +31,8 @@ async function extractResumeText(filename: string, buf: Buffer): Promise<string>
 const SYSTEM = `Extract the candidate's résumé into structured fields via emit_resume.
 Use ONLY information present in the text — never invent roles, dates, or skills. Leave a
 field empty if the text doesn't provide it. Keep experience/education in reverse-chronological
-order as written.`;
+order as written. Capture personal/side/portfolio projects (often under a "Projects" heading,
+or listed with a repo/demo link) as projects, distinct from employment under experience.`;
 
 const TOOL = {
   name: "emit_resume",
@@ -57,6 +58,18 @@ const TOOL = {
             bullets: { type: "array", items: { type: "string" } },
           },
           required: ["company", "title"],
+        },
+      },
+      projects: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            link: { type: "string" },
+            bullets: { type: "array", items: { type: "string" } },
+          },
+          required: ["name"],
         },
       },
       education: {
