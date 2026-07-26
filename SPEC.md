@@ -1,4 +1,4 @@
-# SPEC — jdlearn (v7, FROZEN 2026-07-06)
+# SPEC — jdlearn (v8, FROZEN 2026-07-26)
 
 > The only source of truth for scope + behavior. Changes require a version bump
 > (v1 → v2 …) with the changed sections listed — never an edit-in-place during
@@ -24,6 +24,14 @@ current résumé and overwrites its `bundle` (same frozen schema, R3). No new ap
 row is created — the fit map, cover letter, and plan just refresh. New: `regenerateApplication`
 tRPC mutation (owner-scoped, live rows only) + a "Regenerate with current résumé" action in
 the bundle view. Changed sections: §2, §5, §8.
+
+## §0 v8 changelog — résumé projects
+The `Resume` schema gains a **`projects`** array (`ResumeProject`: `name`, `link`, `bullets`)
+between experience and education. Extraction (`resume-parse.ts`) now pulls personal/side/
+portfolio projects distinctly from employment; the builder edits them, `resumeToMarkdown`
+and the PDF export render a Projects section, so the generation prompt and fit map can point
+at project evidence. Additive/backward-compatible: stored résumés without `projects` default
+to `[]`. Changed sections: §3, §5, §6.
 
 ## §0 v4 changelog — JD↔résumé fit map (the core connection)
 Makes the connection between the JD and the résumé an explicit, structured output — the
