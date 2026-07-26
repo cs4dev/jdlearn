@@ -15,6 +15,7 @@ const EMPTY: Resume = {
   links: [],
   summary: "",
   experience: [],
+  projects: [],
   education: [],
   skills: [],
   updatedAt: "",
@@ -214,6 +215,38 @@ export function ResumeBuilder() {
           </CardBody>
         </Card>
 
+        {/* Projects */}
+        <Card className="border border-gray-100" shadow="sm">
+          <CardBody className="gap-4 p-5">
+            <div className="flex items-center justify-between">
+              <SectionLabel>Projects</SectionLabel>
+              <Button size="sm" variant="flat" onPress={() => set("projects", [...r.projects, { name: "", link: "", bullets: [] }])}>
+                + Add
+              </Button>
+            </div>
+            {r.projects.length === 0 && <p className="text-sm text-gray-500">No projects yet.</p>}
+            {r.projects.map((p, i) => (
+              <div key={i} className="space-y-3 rounded-xl border border-gray-100 p-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input size="sm" label="Name" variant="bordered" value={p.name} onValueChange={(v) => updateAt("projects", i, { ...p, name: v })} />
+                  <Input size="sm" label="Link" variant="bordered" value={p.link} onValueChange={(v) => updateAt("projects", i, { ...p, link: v })} />
+                </div>
+                <Textarea
+                  size="sm"
+                  label="Highlights (one per line)"
+                  variant="bordered"
+                  minRows={2}
+                  value={p.bullets.join("\n")}
+                  onValueChange={(v) => updateAt("projects", i, { ...p, bullets: v.split("\n") })}
+                />
+                <Button size="sm" variant="light" color="danger" onPress={() => removeAt("projects", i)}>
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </CardBody>
+        </Card>
+
         {/* Education */}
         <Card className="border border-gray-100" shadow="sm">
           <CardBody className="gap-4 p-5">
@@ -265,10 +298,10 @@ export function ResumeBuilder() {
   );
 
   // helpers that close over setR
-  function updateAt<K extends "experience" | "education">(key: K, i: number, v: Resume[K][number]) {
+  function updateAt<K extends "experience" | "projects" | "education">(key: K, i: number, v: Resume[K][number]) {
     setR((p) => ({ ...p, [key]: p[key].map((x, j) => (j === i ? v : x)) }));
   }
-  function removeAt<K extends "experience" | "education">(key: K, i: number) {
+  function removeAt<K extends "experience" | "projects" | "education">(key: K, i: number) {
     setR((p) => ({ ...p, [key]: p[key].filter((_, j) => j !== i) }));
   }
 }
@@ -297,6 +330,16 @@ function resumeHtml(r: Resume): string {
         `${when(e.start, e.end) ? `<span>${esc(when(e.start, e.end))}</span>` : ""}</h3>` +
         (e.bullets.filter(Boolean).length
           ? `<ul>${e.bullets.filter(Boolean).map((b) => `<li>${esc(b)}</li>`).join("")}</ul>`
+          : "") +
+        `</div>`,
+    )
+    .join("");
+  const proj = r.projects
+    .map(
+      (p) => `<div class="item"><h3>${esc(p.name)}` +
+        `${p.link ? `<span>${esc(p.link)}</span>` : ""}</h3>` +
+        (p.bullets.filter(Boolean).length
+          ? `<ul>${p.bullets.filter(Boolean).map((b) => `<li>${esc(b)}</li>`).join("")}</ul>`
           : "") +
         `</div>`,
     )
@@ -331,6 +374,7 @@ function resumeHtml(r: Resume): string {
   ${contact ? `<div class="contact">${contact}</div>` : ""}
   ${r.summary ? `<section><h2>Summary</h2><p class="summary">${esc(r.summary)}</p></section>` : ""}
   ${section("Experience", exp)}
+  ${section("Projects", proj)}
   ${section("Education", edu)}
   ${section("Skills", skills)}
 </body></html>`;
@@ -341,5 +385,6 @@ function clean(r: Resume): Resume {
   return {
     ...r,
     experience: r.experience.map((e) => ({ ...e, bullets: e.bullets.filter((b) => b.trim()) })),
+    projects: r.projects.map((p) => ({ ...p, bullets: p.bullets.filter((b) => b.trim()) })),
   };
 }

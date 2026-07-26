@@ -11,6 +11,7 @@ const valid: Resume = {
   experience: [
     { company: "Analytical Engines", title: "Mathematician", start: "1842", end: "1843", bullets: ["Wrote the first algorithm"] },
   ],
+  projects: [{ name: "Bernoulli generator", link: "github.com/ada/bernoulli", bullets: ["Computed Bernoulli numbers"] }],
   education: [{ school: "Home study", degree: "Mathematics", start: "", end: "" }],
   skills: ["algorithms", "mathematics"],
   updatedAt: "2026-07-01T00:00:00.000Z",
@@ -28,6 +29,7 @@ describe("Resume schema", () => {
   it("fills array/string defaults for a minimal résumé", () => {
     const r = parseResume({ fullName: "Grace Hopper" });
     expect(r.experience).toEqual([]);
+    expect(r.projects).toEqual([]);
     expect(r.skills).toEqual([]);
     expect(r.email).toBe("");
   });
@@ -39,6 +41,9 @@ describe("resumeToMarkdown", () => {
     expect(md).toContain("# Ada Lovelace");
     expect(md).toContain("## Experience");
     expect(md).toContain("- Wrote the first algorithm");
+    expect(md).toContain("## Projects");
+    expect(md).toContain("### Bernoulli generator (github.com/ada/bernoulli)");
+    expect(md).toContain("- Computed Bernoulli numbers");
     expect(md).toContain("## Skills");
     expect(md).toContain("algorithms, mathematics");
   });

@@ -11,6 +11,13 @@ export const ResumeExperience = z.object({
 });
 export type ResumeExperience = z.infer<typeof ResumeExperience>;
 
+export const ResumeProject = z.object({
+  name: z.string().min(1),
+  link: z.string().default(""), // repo/demo URL — evidence the fit map can point at
+  bullets: z.array(z.string()).default([]),
+});
+export type ResumeProject = z.infer<typeof ResumeProject>;
+
 export const ResumeEducation = z.object({
   school: z.string().min(1),
   degree: z.string().default(""),
@@ -27,6 +34,7 @@ export const Resume = z.object({
   links: z.array(z.string()).default([]),
   summary: z.string().default(""),
   experience: z.array(ResumeExperience).default([]),
+  projects: z.array(ResumeProject).default([]),
   education: z.array(ResumeEducation).default([]),
   skills: z.array(z.string()).default([]),
   updatedAt: z.string().default(""), // ISO 8601
@@ -50,6 +58,13 @@ export function resumeToMarkdown(r: Resume): string {
       const when = [e.start, e.end].filter(Boolean).join(" – ");
       lines.push(`### ${e.title}, ${e.company}${when ? ` (${when})` : ""}`);
       for (const b of e.bullets.filter(Boolean)) lines.push(`- ${b}`);
+    }
+  }
+  if (r.projects.length) {
+    lines.push("", "## Projects");
+    for (const p of r.projects) {
+      lines.push(`### ${p.name}${p.link ? ` (${p.link})` : ""}`);
+      for (const b of p.bullets.filter(Boolean)) lines.push(`- ${b}`);
     }
   }
   if (r.education.length) {

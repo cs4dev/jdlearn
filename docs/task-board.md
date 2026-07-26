@@ -17,6 +17,15 @@ _None._
 _None._
 
 ## Done
+- **T-019 — résumé projects (extract + edit + render)** (2026-07-26, fast track, SPEC v8).
+  `Resume` gains a **`projects`** array (`ResumeProject`: `name`, `link`, `bullets`) between
+  experience and education (`shared/src/resume.ts`), rendered by `resumeToMarkdown` (Projects
+  section) so it reaches the generation prompt + fit map. Extraction (`resume-parse.ts`)
+  emits projects distinctly from employment (tool schema + system-prompt guidance). Builder
+  (`ResumeBuilder.tsx`) gets a Projects card (add/edit/remove, name+link+bullets), PDF export
+  section, and blank-bullet cleaning; `updateAt`/`removeAt` unions widened. Additive/backward-
+  compatible (missing `projects` → `[]`). Tests extended (schema default + markdown render).
+  Full gate `VALIDATION: PASS`. Live Claude extraction of projects not gate-verified (no key).
 - **T-018 — kill the pointless first-load skeleton** (2026-07-26, solo track, no SPEC
   change). The whole landing (hero, sample fit map, auth form) is static and needs no
   session, yet `Home.tsx` gated it behind `<PageSkeleton/>` until `authClient.useSession()`
