@@ -19,7 +19,12 @@ fit analysis is the foundation the cover letter and plan derive from:
   lead with the matches (citing the real evidence), acknowledge partials honestly, and
   don't claim gaps as strengths. First person, never inventing experience.
 - learningPlan: 3+ ordered steps that close the "gap" and "partial" requirements above,
-  each with concrete resources.`;
+  each with concrete resources.
+- project: ONE small, concrete capstone the learning plan builds toward — buildable in a
+  weekend or two, not a product. Its techStack is drawn from the JD's OWN technologies
+  (name the specific stack the role uses), and its milestones are ordered build steps.
+  The plan's steps should lead into building it, so the candidate ends with something real
+  in the role's stack.`;
 
 const TOOL = {
   name: "emit_bundle",
@@ -63,8 +68,34 @@ const TOOL = {
           required: ["title", "detail", "resources"],
         },
       },
+      project: {
+        type: "object",
+        description: "The capstone project the learning plan builds toward, in the JD's tech stack.",
+        properties: {
+          title: { type: "string" },
+          summary: { type: "string", description: "what it is + why it exercises the role's skills" },
+          techStack: {
+            type: "array",
+            items: { type: "string" },
+            description: "technologies drawn from the JD",
+          },
+          milestones: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                detail: { type: "string" },
+                estimateHours: { type: "number" },
+              },
+              required: ["title", "detail"],
+            },
+          },
+        },
+        required: ["title", "summary", "techStack", "milestones"],
+      },
     },
-    required: ["roleTitle", "fitAnalysis", "coverLetter", "learningPlan"],
+    required: ["roleTitle", "fitAnalysis", "coverLetter", "learningPlan", "project"],
   },
 };
 

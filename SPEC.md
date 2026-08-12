@@ -1,8 +1,17 @@
-# SPEC — jdlearn (v8, FROZEN 2026-07-26)
+# SPEC — jdlearn (v9, FROZEN 2026-08-12)
 
 > The only source of truth for scope + behavior. Changes require a version bump
 > (v1 → v2 …) with the changed sections listed — never an edit-in-place during
 > implementation (RULES R2).
+
+## §0 v9 changelog — capstone project in the learning plan
+The `GenerationBundle` gains a **`project`**: the single capstone the learning plan builds
+toward — `{ title, summary, techStack[], milestones[] }` — built with technologies drawn
+from the **JD's own stack**. Milestones are ordered build steps (`title`, `detail`,
+optional `estimateHours`). Generation now emits it (required in the `emit_bundle` tool),
+and the bundle view renders it inside the Learning plan section. FROZEN-schema change (R3),
+but **optional** in the Zod schema so pre-v9 stored bundles without a `project` still parse
+on read; the tool requires it for new output. Changed sections: §2, §4.
 
 ## §0 v7 changelog — Google sign-in
 Adds **Google** as a sign-in option alongside email+password (Better Auth social provider).
@@ -104,7 +113,8 @@ of it is grounded in their real history, not generic claims. Single-user tool.
 ## §2 Scope (v3)
 **In:**
 1. Paste JD text; server sends it (plus the caller's résumé, if any) to Claude and returns
-   one structured `GenerationBundle` (cover letter, ≥3 learning steps).
+   one structured `GenerationBundle` (cover letter, ≥3 learning steps, and a capstone
+   `project` the plan builds toward, in the JD's tech stack).
 2. Persist applications; list and reopen past bundles; soft-delete + restore (archive);
    permanently delete an archived application ("Permanently delete", irreversible).
    Regenerate an existing application in place (re-run against its stored JD + the current
@@ -127,10 +137,13 @@ multi-user / sharing; payments.
 ## §3 Domain model
 - **Application** — `{ id, userId, jdText, bundle, createdAt, deletedAt? }`.
 - **GenerationBundle** (FROZEN, see §4) — `{ roleTitle, fitAnalysis, coverLetter,
-  learningPlan[] }`.
+  learningPlan[], project? }`.
 - **FitAnalysis** — `{ overallFit (0–100), summary, requirements[] }`.
 - **FitRequirement** — `{ text, status: match|partial|gap, evidence, gapNote }`.
 - **LearningStep** — `{ title, detail, resources[], estimateHours? }`.
+- **LearningProject** — `{ title, summary, techStack[], milestones[] }`; the capstone the
+  plan builds toward, tech drawn from the JD. Optional on the bundle (pre-v9 back-compat).
+- **ProjectMilestone** — `{ title, detail, estimateHours? }`.
 - **Resume** — `{ fullName, email, phone, location, links[], summary, experience[],
   education[], skills[], updatedAt }`; one per user. `resumeToMarkdown` renders it for the
   prompt and for export.
@@ -145,7 +158,10 @@ multi-user / sharing; payments.
   evidence (`fitAnalysis`), then derives the cover letter (matches lead, no gap claimed as
   strength) and the plan (closes gaps/partials) FROM that map. Status is grounded only in
   résumé evidence, never invented. Without a résumé, requirements are gaps and the summary
-  says to add one. `overallFit` is 0–100.
+  says to add one. `overallFit` is 0–100. The plan builds toward one capstone **`project`**:
+  a small, weekend-scale build whose `techStack` is drawn from the JD's own technologies,
+  broken into ordered `milestones`. Required in the `emit_bundle` tool (new output always
+  has it); optional in the Zod schema so pre-v9 stored bundles still parse (R3).
 - **Résumé import** — text extraction (unpdf/mammoth) then a cheap-model Claude call
   structures it into `Resume`. Gated by **FROZEN — `canImportResume`** (`packages/shared/
   src/rate-limit.ts`): one import per user per rolling 30-day window, single pure policy,

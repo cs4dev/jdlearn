@@ -17,6 +17,15 @@ const valid: GenerationBundle = {
     { title: "Build an HTTP API", detail: "chi router", resources: [] },
     { title: "Add Postgres", detail: "pgx + migrations", resources: [] },
   ],
+  project: {
+    title: "URL shortener API",
+    summary: "A small Go service that exercises the role's stack end to end.",
+    techStack: ["Go", "Postgres"],
+    milestones: [
+      { title: "HTTP endpoints", detail: "POST /shorten, GET /:code" },
+      { title: "Persist links", detail: "pgx + a migration", estimateHours: 3 },
+    ],
+  },
 };
 
 describe("GenerationBundle schema (frozen)", () => {
@@ -41,5 +50,21 @@ describe("GenerationBundle schema (frozen)", () => {
 
   it("rejects an out-of-range fit score", () => {
     expect(() => parseBundle({ ...valid, fitAnalysis: { ...valid.fitAnalysis, overallFit: 140 } })).toThrow();
+  });
+
+  it("accepts a bundle with a capstone project", () => {
+    expect(() => parseBundle(valid)).not.toThrow();
+    expect(parseBundle(valid).project?.techStack).toEqual(["Go", "Postgres"]);
+  });
+
+  it("stays backward-compatible: a pre-v9 bundle without a project still parses", () => {
+    const { project: _omit, ...noProject } = valid;
+    expect(() => parseBundle(noProject)).not.toThrow();
+    expect(parseBundle(noProject).project).toBeUndefined();
+  });
+
+  it("rejects a project with fewer than 2 milestones", () => {
+    const bad = { ...valid, project: { ...valid.project!, milestones: valid.project!.milestones.slice(0, 1) } };
+    expect(() => parseBundle(bad)).toThrow();
   });
 });

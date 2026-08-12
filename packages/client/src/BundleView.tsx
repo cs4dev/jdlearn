@@ -170,6 +170,48 @@ export function BundleView({
               </li>
             ))}
           </ol>
+
+          {bundle.project && (
+            <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
+                Capstone project
+              </p>
+              <p className="mt-1 font-semibold text-gray-900">{bundle.project.title}</p>
+              <p className="mt-1 text-sm text-gray-600">{bundle.project.summary}</p>
+              {bundle.project.techStack.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {bundle.project.techStack.map((t, i) => (
+                    <span
+                      key={i}
+                      className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-indigo-100"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <ol className="mt-3 space-y-2">
+                {bundle.project.milestones.map((m, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-indigo-200 text-[11px] font-semibold text-indigo-800">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {m.title}
+                        {m.estimateHours ? (
+                          <span className="ml-2 text-xs font-normal text-gray-500">
+                            ~{m.estimateHours}h
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="text-sm text-gray-600">{m.detail}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </section>
       </CardBody>
     </Card>
