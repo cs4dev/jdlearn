@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Markdown from "react-markdown";
 import { Button, Card, CardBody, Divider, Textarea } from "@heroui/react";
-import type { Application } from "@jdlearn/shared";
+import type { Application, LearningProject } from "@jdlearn/shared";
 import { trpc } from "./trpc";
 import { FitMap } from "./FitMap";
 
@@ -31,23 +31,73 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({
+  text,
+  label = "Copy",
+  iconOnly = false,
+}: {
+  text: string;
+  label?: string;
+  iconOnly?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  if (iconOnly) {
+    return (
+      <Button
+        size="sm"
+        variant="light"
+        isIconOnly
+        aria-label={copied ? "Copied" : label}
+        color={copied ? "success" : "default"}
+        onPress={copy}
+      >
+        {copied ? "✓" : <CopyIcon />}
+      </Button>
+    );
+  }
   return (
     <Button
       size="sm"
       variant="flat"
       color={copied ? "success" : "primary"}
       className="font-medium"
-      onPress={async () => {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      }}
+      onPress={copy}
     >
-      {copied ? "Copied" : "Copy"}
+      {copied ? "Copied" : label}
     </Button>
   );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+// A ready-to-paste brief for a coding agent (Claude Code, etc.): what to build,
+// the role's stack, and the milestones as an ordered checklist.
+function projectPrompt(p: LearningProject): string {
+  const milestones = p.milestones
+    .map((m, i) => `${i + 1}. ${m.title} — ${m.detail}`)
+    .join("\n");
+  return `Help me build this project. It's a learning capstone to prepare for a job, using the role's tech stack. Scaffold it, then work through the milestones in order.
+
+# ${p.title}
+
+${p.summary}
+
+Tech stack: ${p.techStack.join(", ")}
+
+## Milestones
+${milestones}`;
 }
 
 export function BundleView({
@@ -173,9 +223,12 @@ export function BundleView({
 
           {bundle.project && (
             <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
-                Capstone project
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
+                  Capstone project
+                </p>
+                <CopyButton text={projectPrompt(bundle.project)} label="Copy project prompt" iconOnly />
+              </div>
               <p className="mt-1 font-semibold text-gray-900">{bundle.project.title}</p>
               <p className="mt-1 text-sm text-gray-600">{bundle.project.summary}</p>
               {bundle.project.techStack.length > 0 && (

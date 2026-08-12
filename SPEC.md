@@ -9,7 +9,8 @@ The `GenerationBundle` gains a **`project`**: the single capstone the learning p
 toward — `{ title, summary, techStack[], milestones[] }` — built with technologies drawn
 from the **JD's own stack**. Milestones are ordered build steps (`title`, `detail`,
 optional `estimateHours`). Generation now emits it (required in the `emit_bundle` tool),
-and the bundle view renders it inside the Learning plan section. FROZEN-schema change (R3),
+and the bundle view renders it inside the Learning plan section, with a **copy icon** that
+copies the project as a ready-to-paste coding-agent brief. FROZEN-schema change (R3),
 but **optional** in the Zod schema so pre-v9 stored bundles without a `project` still parse
 on read; the tool requires it for new output. Changed sections: §2, §4.
 
@@ -120,6 +121,8 @@ of it is grounded in their real history, not generic claims. Single-user tool.
    Regenerate an existing application in place (re-run against its stored JD + the current
    résumé, overwriting its bundle — no new row).
 3. Copy the cover letter to the clipboard; edit it in place and save (live applications).
+   Copy the capstone **project** as a ready-to-paste brief for a coding agent (a copy icon
+   on the project card — title, summary, tech stack, milestones as an ordered list).
 4. Maintain a per-user **résumé** via a structured builder (contact, summary, experience,
    education, skills); persisted (one per user); downloadable as PDF (browser print).
 5. **Import a résumé** by uploading a PDF, Word (`.docx`), or Markdown/text
