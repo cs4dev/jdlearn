@@ -23,6 +23,9 @@ export async function getAuth() {
             google: {
               clientId: env.GOOGLE_CLIENT_ID,
               clientSecret: env.GOOGLE_CLIENT_SECRET,
+              // Always show Google's account chooser (users with multiple
+              // Google accounts pick each time instead of silent auto-login).
+              prompt: "select_account",
             },
           },
           // Google verifies email ownership, so trust it to link onto an existing

@@ -61,7 +61,7 @@ export function FitMap({
           .map((req, i) => {
             const s = FIT_STATUS[req.status];
             return (
-              <li key={i} className="flex gap-3 rounded-xl border border-gray-100 p-4">
+              <li key={i} className="flex flex-col gap-2 rounded-xl border border-gray-100 p-4 sm:flex-row sm:gap-3">
                 <Chip
                   size="sm"
                   variant="flat"
