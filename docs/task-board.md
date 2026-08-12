@@ -17,6 +17,15 @@ _None._
 _None._
 
 ## Done
+- **T-020 — capstone project in the learning plan** (2026-08-12, full track, SPEC v9).
+  `GenerationBundle` gains an optional **`project`** (`LearningProject`: `title`, `summary`,
+  `techStack[]`, `milestones[]`) — the capstone the learning plan builds toward, tech drawn
+  from the JD. Optional in Zod so pre-v9 stored bundles still `parseBundle` on read (R3);
+  **required** in the `emit_bundle` tool so new generations always emit one. `anthropic.ts`
+  SYSTEM prompt + tool schema updated; `BundleView` renders a capstone card (tech-stack chips
+  + numbered milestones) inside the Learning plan section. Tests: project accepted, back-compat
+  (missing `project` parses), <2 milestones rejected. SPEC §0/§2/§3/§4 bumped v8→v9. Full gate
+  `VALIDATION: PASS`. Live Claude emission of a `project` not gate-verified (no API key).
 - **T-019 — résumé projects (extract + edit + render)** (2026-07-26, fast track, SPEC v8).
   `Resume` gains a **`projects`** array (`ResumeProject`: `name`, `link`, `bullets`) between
   experience and education (`shared/src/resume.ts`), rendered by `resumeToMarkdown` (Projects

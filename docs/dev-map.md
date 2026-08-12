@@ -16,7 +16,8 @@ packages/
 
 ## Where things live
 - **shared/src/bundle.ts** — the ONLY place the `GenerationBundle` shape exists (incl.
-  `FitAnalysis`/`FitRequirement`, SPEC v4). Do not duplicate it (RULES R3). Pure + tested.
+  `FitAnalysis`/`FitRequirement`, SPEC v4; optional `LearningProject` capstone, SPEC v9).
+  Do not duplicate it (RULES R3). Pure + tested.
   (Demo schema + sandbox guard removed in SPEC v2.)
 - **shared/src/resume.ts** — `Resume` schema + `resumeToMarkdown` (SPEC v3). Tested. NOT
   the frozen bundle; it feeds the prompt, not the output.

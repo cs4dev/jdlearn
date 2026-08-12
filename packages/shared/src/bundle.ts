@@ -11,6 +11,23 @@ export const LearningStep = z.object({
 });
 export type LearningStep = z.infer<typeof LearningStep>;
 
+// The capstone the learning plan builds toward: ONE small project, built with the
+// JD's own tech stack, broken into ordered milestones (SPEC v9).
+export const ProjectMilestone = z.object({
+  title: z.string().min(1),
+  detail: z.string().min(1),
+  estimateHours: z.number().positive().optional(),
+});
+export type ProjectMilestone = z.infer<typeof ProjectMilestone>;
+
+export const LearningProject = z.object({
+  title: z.string().min(1),
+  summary: z.string().min(1), // what it is + why it exercises the role's skills
+  techStack: z.array(z.string()).min(1), // technologies drawn from the JD
+  milestones: z.array(ProjectMilestone).min(2),
+});
+export type LearningProject = z.infer<typeof LearningProject>;
+
 // The core value (SPEC v4): the explicit connection between the JD and the résumé —
 // each JD requirement mapped to résumé evidence, a partial match, or a gap.
 export const FitRequirement = z.object({
@@ -35,6 +52,9 @@ export const GenerationBundle = z.object({
   coverLetter: z.string().min(1),
   // Acceptance #2: at least 3 learning steps.
   learningPlan: z.array(LearningStep).min(3),
+  // The capstone project the plan builds toward (SPEC v9). Optional so pre-v9 stored
+  // bundles still parse on read (R3); the emit_bundle tool requires it for new output.
+  project: LearningProject.optional(),
 });
 export type GenerationBundle = z.infer<typeof GenerationBundle>;
 
