@@ -55,6 +55,44 @@ export async function updateApplicationBundle(
   return matchedCount === 1;
 }
 
+/**
+ * Mark a live application done: set its bundle + terminal status (async worker write).
+ * Scoped to owner + live (a mid-flight soft-delete is not resurrected). Returns whether one matched.
+ */
+export async function completeApplication(
+  userId: string,
+  id: string,
+  bundle: GenerationBundle,
+): Promise<boolean> {
+  const db = await getDb();
+  const { matchedCount } = await db
+    .collection<Application>(COLL)
+    .updateOne(
+      { userId, id, ...live },
+      { $set: { status: "done", bundle, updatedAt: new Date().toISOString() } },
+    );
+  return matchedCount === 1;
+}
+
+/**
+ * Mark a live application failed with a user-facing message (async worker write).
+ * Scoped to owner + live. Returns whether one matched.
+ */
+export async function failApplication(
+  userId: string,
+  id: string,
+  error: string,
+): Promise<boolean> {
+  const db = await getDb();
+  const { matchedCount } = await db
+    .collection<Application>(COLL)
+    .updateOne(
+      { userId, id, ...live },
+      { $set: { status: "failed", error, updatedAt: new Date().toISOString() } },
+    );
+  return matchedCount === 1;
+}
+
 /** Overwrite just the cover letter of a live application, scoped to its owner (user edit). */
 export async function updateApplicationCoverLetter(
   userId: string,

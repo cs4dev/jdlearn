@@ -7,6 +7,7 @@ import { z } from "zod";
 import { type Application, canImportResume, Resume } from "@jdlearn/shared";
 import { getUserId } from "./session";
 import { generateBundle } from "./anthropic";
+import { dispatchGeneration } from "./generation";
 import { importResume } from "./resume-parse";
 import {
   deleteApplication,
@@ -45,21 +46,24 @@ const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 export const appRouter = router({
   health: publicProcedure.query(() => ({ ok: true as const })),
 
+  // Async (SPEC §2 v10): persist a pending row BEFORE Claude is called, dispatch the work
+  // off the request path (worker Lambda in prod, in-process locally), and return the pending
+  // Application immediately. The client polls getApplication by id until terminal. The
+  // request path never calls generateBundle — that runs in the worker seam.
   generate: protectedProcedure
     .input(z.object({ jdText: z.string().min(1).max(40_000) }))
     .mutation(async ({ ctx, input }): Promise<Application> => {
-      const resume = await getResume(ctx.userId); // personalize from real history if present
-      const bundle = await generateBundle(input.jdText, resume); // throws clear error if no key (#8)
       const id = randomUUID();
       const app: Application = {
         id,
         userId: ctx.userId,
         jdText: input.jdText,
-        bundle,
+        status: "pending",
         createdAt: new Date().toISOString(),
       };
-      await saveApplication(app);
-      return app;
+      await saveApplication(app); // durable BEFORE any Claude call
+      await dispatchGeneration({ userId: ctx.userId, appId: id, jdText: input.jdText });
+      return app; // pending — no bundle yet; client polls by app.id
     }),
 
   // Re-run generation for an existing app against its stored JD + the current résumé,

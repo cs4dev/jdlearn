@@ -1,8 +1,26 @@
-# SPEC — jdlearn (v9, FROZEN 2026-08-12)
+# SPEC — jdlearn (v10, FROZEN 2026-08-14)
 
 > The only source of truth for scope + behavior. Changes require a version bump
 > (v1 → v2 …) with the changed sections listed — never an edit-in-place during
 > implementation (RULES R2).
+
+## §0 v10 changelog — async generation (non-blocking, durable)
+Generation is now **asynchronous**. `generate` persists the application row with
+`status: "pending"` **before** Claude is called, dispatches the ~20–40s work **off the
+request path**, and returns the pending `Application` immediately — the client polls it to
+completion instead of holding a long request open. In production the work runs on a second
+**worker Lambda** (async `InvocationType: "Event"` invoke of the SAME esbuild zip, handler
+`worker.handler`, no Function URL); locally/in the gate (no `WORKER_FUNCTION_NAME`) the same
+seam runs **in-process**, fire-and-forget. The worker writes a terminal state to Mongo:
+`done` (with the parsed `bundle`) or `failed` (with an `error` message) — a thrown generation
+always lands `failed`, never stuck `pending`. The client fires → polls (`getApplication`,
+2s) → toasts + renders on completion, and **reconnects** to an in-flight `pending` job on
+reload (surfaced by `listApplications`); a `failed` job shows an error + Retry. `Application`
+gains `status` (`pending|done|failed`, defaulting to `done` so pre-v10 rows read as done),
+an optional `bundle` (absent until done), and an optional `error`. The frozen
+`GenerationBundle` schema (§4) is **unchanged** (R3). New server config
+`WORKER_FUNCTION_NAME` (empty ⇒ in-process). Only `generate` is async (not `regenerate`).
+Changed sections: §2, §3, §5.
 
 ## §0 v9 changelog — capstone project in the learning plan
 The `GenerationBundle` gains a **`project`**: the single capstone the learning plan builds
@@ -113,9 +131,13 @@ of it is grounded in their real history, not generic claims. Single-user tool.
 
 ## §2 Scope (v3)
 **In:**
-1. Paste JD text; server sends it (plus the caller's résumé, if any) to Claude and returns
-   one structured `GenerationBundle` (cover letter, ≥3 learning steps, and a capstone
-   `project` the plan builds toward, in the JD's tech stack).
+1. Paste JD text; the server persists a **pending** application and generates one structured
+   `GenerationBundle` (cover letter, ≥3 learning steps, and a capstone `project` the plan
+   builds toward, in the JD's tech stack) from it (plus the caller's résumé, if any) via
+   Claude. Generation is **asynchronous** (v10): it runs off the request path (a worker
+   Lambda in production; in-process locally), so the UI isn't blocked — the client polls the
+   job until it is `done` (renders + toasts) or `failed` (error + Retry), and reconnects to
+   an in-flight job on reload. Result written durably to Mongo by the worker.
 2. Persist applications; list and reopen past bundles; soft-delete + restore (archive);
    permanently delete an archived application ("Permanently delete", irreversible).
    Regenerate an existing application in place (re-run against its stored JD + the current
@@ -138,7 +160,10 @@ PDF rendering (export is the browser's own print-to-PDF); multiple résumé vers
 multi-user / sharing; payments.
 
 ## §3 Domain model
-- **Application** — `{ id, userId, jdText, bundle, createdAt, deletedAt? }`.
+- **Application** — `{ id, userId, jdText, status, bundle?, error?, createdAt, updatedAt?,
+  deletedAt? }`. `status` is `pending|done|failed` (v10), defaulting to `done` when absent so
+  pre-v10 rows read as done. `bundle` is present once `done` (absent while `pending`/`failed`);
+  `error` is set only on `failed`; `updatedAt` is stamped when the worker writes a terminal state.
 - **GenerationBundle** (FROZEN, see §4) — `{ roleTitle, fitAnalysis, coverLetter,
   learningPlan[], project? }`.
 - **FitAnalysis** — `{ overallFit (0–100), summary, requirements[] }`.
@@ -172,13 +197,19 @@ multi-user / sharing; payments.
 
 ## §5 API surface (tRPC)
 - `health` — public query → `{ ok: true }`. Liveness.
-- `generate` — protected mutation, input `{ jdText: string }` → `Application`.
-  Server loads the caller's résumé, calls Claude, parses with the frozen schema, persists.
-  Server is the authority: the client never sends the bundle, only JD text.
+- `generate` — protected mutation, input `{ jdText: string }` → `Application` (the **pending**
+  row: `status: "pending"`, no `bundle`). Server persists the pending row BEFORE any Claude
+  call, then dispatches generation off the request path (worker Lambda via async Event invoke
+  in prod; in-process locally); the worker loads the caller's résumé, calls Claude, parses
+  with the frozen schema, and writes `done` (with `bundle`) or `failed` (with `error`) to the
+  row. Server is the authority: the client never sends the bundle, only JD text.
 - `updateCoverLetter` — protected mutation, input `{ id, coverLetter }` → `{ ok: true }`.
   Owner-scoped, live rows only; overwrites `bundle.coverLetter` in place (rest of the frozen
   bundle untouched). 404 if no live application matches.
 - `listApplications` / `getApplication` / `listArchived` — protected, scoped to `userId`.
+  `getApplication` and `listApplications` return rows in **any** status (v10) — the client
+  polls `getApplication` until terminal and reconnects to a `pending` row from
+  `listApplications` on reload.
 - `deleteApplication` / `restoreApplication` — protected soft-delete/restore (RULES R12).
 - `regenerateApplication` — protected mutation, input `{ id }` → `Application`. Owner-scoped,
   live rows only; re-runs `generate` against the stored `jdText` + current résumé and

@@ -17,6 +17,28 @@ _None._
 _None._
 
 ## Done
+- **T-021 — async generation (durable job, non-blocking UI)** (2026-08-14, full track, SPEC
+  v10). Generation moved OFF the tRPC request path so a mid-flight refresh/close no longer loses
+  work or double-spends Anthropic. `Application` gains a `status` (`pending|done|failed`,
+  `.default("done")` for pre-T-021 rows), optional-until-done `bundle`, `error`, `updatedAt` —
+  single schema home, frozen `GenerationBundle` untouched (R3). `generate` now persists a
+  `pending` row BEFORE Claude, then `dispatchGeneration` and returns immediately; polling reuses
+  `getApplication`, `listApplications` surfaces pending/failed for reload-reconnect. New
+  `generation.ts` seam (`runGenerationJob` = try→`completeApplication`/catch→`failApplication`,
+  terminal-on-throw; `dispatchGeneration` switches on `WORKER_FUNCTION_NAME`: set → async
+  `Event` invoke of a 2nd worker Lambda / unset → in-process fire-and-forget so local+gate need
+  no AWS). New `lambda/worker.ts` handler (Zod-validated Event payload). Infra: `aws_lambda_function.worker`
+  (shared zip, `worker.handler`, timeout 120, no Function URL) + IAM `lambda:InvokeFunction` +
+  `WORKER_FUNCTION_NAME` in `lambda_env` (fixed-name, acyclic). Client: fire→poll(2s)→toast→render,
+  reconnect from a `pending` row on reload, failed→banner+Retry (HeroUI `addToast`/`ToastProvider`,
+  no new client dep). One dev-only dep `@aws-sdk/client-lambda` (externalized, zero runtime bytes).
+  PM forks: async worker Lambda (not SQS) + in-app poll/toast (not web push) — both settled by
+  the user upfront. Reviewer **APPROVE** (0 blocking, 3 nits), QA **PASS**, full gate
+  `VALIDATION: PASS`. Deploy-time/manual-verify: `terraform validate`+apply (local TF 1.8.4 <
+  required 1.10.0), the real AWS async-invoke + IAM path, and browser fire→reload-reconnect→toast/
+  retry UX (A7). Residual (design §11): a Mongo-unreachable `failApplication` could leave a row
+  `pending` — bounded by AWS 2× async retry; `pending`-reaper or SQS+DLQ is the upgrade path.
+  Out of scope (deferred): SQS/DLQ, web push, async for `regenerateApplication`/`importResume` (⇒ T-022).
 - **T-020 — capstone project in the learning plan** (2026-08-12, full track, SPEC v9).
   `GenerationBundle` gains an optional **`project`** (`LearningProject`: `title`, `summary`,
   `techStack[]`, `milestones[]`) — the capstone the learning plan builds toward, tech drawn

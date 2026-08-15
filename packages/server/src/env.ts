@@ -24,6 +24,10 @@ const Env = z.object({
   // Résumé extraction — a structured-parse task; a cheap fast model is plenty.
   ANTHROPIC_EXTRACT_MODEL: z.string().default("claude-haiku-4-5"),
   DATA_DIR: z.string().default("./data"),
+  // Name of the worker Lambda for async Event invokes (T-021). Empty (local/dev/gate) ⇒
+  // run the generation seam in-process instead of invoking AWS. Set only in the deployed
+  // HTTP Lambda's env (infra wires it to the worker function name).
+  WORKER_FUNCTION_NAME: z.string().default(""),
 });
 
 export const env = Env.parse(process.env);

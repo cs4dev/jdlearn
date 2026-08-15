@@ -19,6 +19,10 @@ provider "aws" {
 locals {
   name_prefix = "jdlearn-${var.env}"
   web_origin  = "https://${var.web_domain}"
+  # Fixed name used for BOTH the worker resource's function_name AND the HTTP Lambda's env
+  # var (WORKER_FUNCTION_NAME), so there is provably no resource-reference cycle regardless
+  # of ordering (T-021 async generation).
+  worker_function_name = "${local.name_prefix}-worker"
   tags = {
     Project = "jdlearn"
     Env     = var.env
@@ -40,6 +44,9 @@ locals {
     GOOGLE_CLIENT_ID     = var.google_client_id
     GOOGLE_CLIENT_SECRET = var.google_client_secret
     ANTHROPIC_API_KEY    = var.anthropic_api_key
+    # HTTP Lambda dispatches generation to the worker via async Event invoke (T-021).
+    # The worker also receives this var harmlessly; it never invokes itself.
+    WORKER_FUNCTION_NAME = local.worker_function_name
   }
 }
 
@@ -89,6 +96,42 @@ resource "aws_lambda_function" "http" {
     variables = local.lambda_env
   }
   tags = local.tags
+}
+
+# ---------- Worker Lambda (async generation, T-021) ----------
+# Same zip as the HTTP Lambda (both handlers ship in http.zip), different handler export.
+# Reached ONLY via async `InvocationType: "Event"` from the HTTP Lambda — NO Function URL.
+# Timeout 120s gives headroom over the 20–40s Claude call; async invokes are not bound by
+# the 60s CloudFront/Function-URL ceiling.
+resource "aws_lambda_function" "worker" {
+  function_name    = local.worker_function_name
+  role             = aws_iam_role.lambda_exec.arn
+  handler          = "worker.handler"
+  runtime          = "nodejs22.x"
+  filename         = local.http_zip
+  source_code_hash = filebase64sha256(local.http_zip)
+  timeout          = 120
+  memory_size      = 512
+
+  environment {
+    variables = local.lambda_env
+  }
+  tags = local.tags
+}
+
+# Let the HTTP Lambda's exec role async-invoke the worker (T-021). Referencing the worker's
+# ARN here is acyclic: the worker resource depends on neither this policy nor the HTTP Lambda.
+resource "aws_iam_role_policy" "invoke_worker" {
+  name = "${local.name_prefix}-invoke-worker"
+  role = aws_iam_role.lambda_exec.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "lambda:InvokeFunction"
+      Resource = aws_lambda_function.worker.arn
+    }]
+  })
 }
 
 resource "aws_lambda_function_url" "http" {
