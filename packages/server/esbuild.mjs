@@ -10,7 +10,7 @@ rmSync(outdir, { recursive: true, force: true });
 mkdirSync(outdir, { recursive: true });
 
 await esbuild.build({
-  entryPoints: { http: "src/lambda/http.ts" },
+  entryPoints: { http: "src/lambda/http.ts", worker: "src/lambda/worker.ts" },
   bundle: true,
   platform: "node",
   target: "node22",
@@ -38,6 +38,8 @@ await esbuild.build({
   },
 });
 
-execSync(`cd ${outdir} && zip -q http.zip http.mjs`, { stdio: "inherit" });
+// One zip, two handlers (http.handler + worker.handler) — both Lambda resources point at
+// it with the same source_code_hash (infra/main.tf).
+execSync(`cd ${outdir} && zip -q http.zip http.mjs worker.mjs`, { stdio: "inherit" });
 // eslint-disable-next-line no-console -- build-script status output
-console.log("Lambda bundle + zip built: dist/lambda/http.zip");
+console.log("Lambda bundle + zip built: dist/lambda/http.zip (http + worker handlers)");

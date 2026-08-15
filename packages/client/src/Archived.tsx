@@ -83,7 +83,10 @@ export function Archived() {
                       onClick={() => setViewing(a)}
                       className="flex-1 py-3 text-left"
                     >
-                      <p className="font-medium text-gray-900">{a.bundle.roleTitle}</p>
+                      <p className="font-medium text-gray-900">
+                        {a.bundle?.roleTitle ??
+                          (a.status === "failed" ? "Generation failed" : "Generating…")}
+                      </p>
                       <p className="text-xs text-gray-500">
                         Deleted {a.deletedAt ? new Date(a.deletedAt).toLocaleString() : "—"}
                       </p>
@@ -122,7 +125,10 @@ export function Archived() {
           <ModalBody>
             <p className="text-sm text-gray-600">
               Permanently delete the application for{" "}
-              <span className="font-medium text-gray-900">{toPurge?.bundle.roleTitle}</span>.
+              <span className="font-medium text-gray-900">
+                {toPurge?.bundle?.roleTitle ?? "this job"}
+              </span>
+              .
               This can't be undone — it won't be recoverable from the archive.
             </p>
           </ModalBody>

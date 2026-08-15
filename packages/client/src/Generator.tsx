@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  addToast,
   Button,
   Card,
   CardBody,
@@ -45,6 +46,9 @@ export function Generator() {
   const [jd, setJd] = useState("");
   const [viewing, setViewing] = useState<Application | null>(null);
   const [toDelete, setToDelete] = useState<Application | null>(null);
+  // The single in-flight generation job, tracked by application id. Generation runs off the
+  // request path now (SPEC §2 v10): fire → poll getApplication → toast + render on terminal.
+  const [jobId, setJobId] = useState<string | null>(null);
   // Acknowledge a just-created account once, on the first authenticated screen.
   const [justSignedUp] = useState(() => {
     const flag =
@@ -57,10 +61,66 @@ export function Generator() {
   const past = trpc.listApplications.useQuery();
   const generate = trpc.generate.useMutation({
     onSuccess: (app) => {
-      setViewing(app);
+      // `app` is the pending row (no bundle yet) — start polling, don't view it.
+      setViewing(null);
+      setJobId(app.id);
       utils.listApplications.invalidate();
     },
   });
+
+  // Poll the in-flight job until it reaches a terminal status. Stops polling (returns false)
+  // on done/failed/missing — survives a reload because `jobId` is re-seeded from the pending
+  // row below.
+  const job = trpc.getApplication.useQuery(
+    { id: jobId ?? "" },
+    {
+      enabled: !!jobId,
+      refetchInterval: (q) => (q.state.data?.status === "pending" ? 2000 : false),
+    },
+  );
+
+  // React to a terminal transition exactly once per job (guarded by the handled-id ref).
+  const handledRef = useRef<string | null>(null);
+  useEffect(() => {
+    const j = job.data;
+    if (!jobId || !j || j.id !== jobId) return;
+    if (j.status === "done") {
+      if (handledRef.current === jobId) return;
+      handledRef.current = jobId;
+      addToast({ title: "Your application is ready", color: "success" });
+      setViewing(j);
+      setJobId(null);
+      utils.listApplications.invalidate();
+    } else if (j.status === "failed") {
+      if (handledRef.current === jobId) return;
+      handledRef.current = jobId;
+      addToast({
+        title: "Generation failed",
+        description: j.error ?? "Something went wrong.",
+        color: "danger",
+      });
+      // Keep jobId cleared; the failed row surfaces in the list with a Retry affordance.
+      setJobId(null);
+    }
+  }, [job.data, jobId, utils]);
+
+  // The just-failed job whose error + Retry we surface inline (a banner). Historical failed
+  // rows appear in the past-applications list instead — we don't re-banner them on reload.
+  const failedJob = job.data?.status === "failed" ? job.data : null;
+
+  // Reconnect on reload: if the list has a still-pending job and we aren't already tracking
+  // one, resume polling it. The worker owns the single in-flight job; the client only observes.
+  useEffect(() => {
+    if (jobId) return;
+    const pending = past.data?.find((a) => a.status === "pending");
+    if (pending) setJobId(pending.id);
+  }, [past.data, jobId]);
+
+  // Whether a generation is actively in flight (survives reload — gated on the polled status,
+  // not the mutation's transient isPending).
+  const running = !!jobId && (job.data?.status === "pending" || job.data === undefined);
+  // Busy = the brief dispatch mutation OR an in-flight job. Drives the button + skeleton.
+  const busy = generate.isPending || running;
   const regenerate = trpc.regenerateApplication.useMutation({
     onSuccess: (app) => {
       setViewing(app);
@@ -121,22 +181,36 @@ export function Generator() {
             <Button
               color="primary"
               className="font-medium"
-              isDisabled={!jd.trim()}
-              isLoading={generate.isPending}
+              isDisabled={!jd.trim() || busy}
+              isLoading={busy}
               onPress={() => generate.mutate({ jdText: jd })}
-              endContent={!generate.isPending && <span aria-hidden>→</span>}
+              endContent={!busy && <span aria-hidden>→</span>}
             >
-              {generate.isPending ? "Generating…" : "Generate"}
+              {busy ? "Generating…" : "Generate"}
             </Button>
-            {generate.isPending && <GeneratingStatus />}
+            {running && <GeneratingStatus />}
           </div>
+          {/* The dispatch itself failed (couldn't even queue the job). */}
           {generate.error && (
             <div className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-              <p>Generation didn't finish: {generate.error.message}</p>
+              <p>Couldn't start generation: {generate.error.message}</p>
               <button
                 type="button"
                 className="mt-1 font-medium underline underline-offset-2"
                 onClick={() => generate.mutate({ jdText: jd })}
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          {/* The generation ran but failed — surface its error + a Retry that re-fires it. */}
+          {failedJob && (
+            <div className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
+              <p>Generation failed: {failedJob.error ?? "Something went wrong."}</p>
+              <button
+                type="button"
+                className="mt-1 font-medium underline underline-offset-2"
+                onClick={() => generate.mutate({ jdText: failedJob.jdText })}
               >
                 Try again
               </button>
@@ -147,7 +221,7 @@ export function Generator() {
       )}
 
       {/* Preview the incoming bundle's shape during the long generation. */}
-      {generate.isPending && <BundleSkeleton />}
+      {running && <BundleSkeleton />}
 
       {viewing && (
         <div className="space-y-3">
@@ -175,7 +249,9 @@ export function Generator() {
             app={viewing}
             editable
             onSaved={(coverLetter) =>
-              setViewing((v) => v && { ...v, bundle: { ...v.bundle, coverLetter } })
+              setViewing((v) =>
+                v && v.bundle ? { ...v, bundle: { ...v.bundle, coverLetter } } : v,
+              )
             }
           />
         </div>
@@ -192,6 +268,13 @@ export function Generator() {
             <ul className="divide-y divide-gray-100">
               {past.data.map((a) => {
                 const active = viewing?.id === a.id;
+                // Rows may now be pending/failed with no bundle (SPEC §2 v10) — label + guard.
+                const label = a.bundle
+                  ? a.bundle.roleTitle
+                  : a.status === "failed"
+                    ? "Generation failed"
+                    : "Generating…";
+                const openable = !!a.bundle;
                 return (
                   <li
                     key={a.id}
@@ -199,10 +282,15 @@ export function Generator() {
                   >
                     <button
                       type="button"
-                      onClick={() => setViewing(a)}
-                      className="flex-1 py-3 text-left"
+                      onClick={() => openable && setViewing(a)}
+                      disabled={!openable}
+                      className="flex-1 py-3 text-left disabled:cursor-default"
                     >
-                      <p className="font-medium text-gray-900">{a.bundle.roleTitle}</p>
+                      <p
+                        className={`font-medium ${a.status === "failed" ? "text-danger" : "text-gray-900"}`}
+                      >
+                        {label}
+                      </p>
                       <p className="text-xs text-gray-500">
                         {new Date(a.createdAt).toLocaleString()}
                       </p>
@@ -212,7 +300,7 @@ export function Generator() {
                       size="sm"
                       variant="light"
                       color="danger"
-                      aria-label={`Delete ${a.bundle.roleTitle}`}
+                      aria-label={`Delete ${label}`}
                       onPress={() => setToDelete(a)}
                     >
                       <svg
@@ -245,7 +333,9 @@ export function Generator() {
           <ModalBody>
             <p className="text-sm text-gray-600">
               This removes the application for{" "}
-              <span className="font-medium text-gray-900">{toDelete?.bundle.roleTitle}</span>{" "}
+              <span className="font-medium text-gray-900">
+                {toDelete?.bundle?.roleTitle ?? "this job"}
+              </span>{" "}
               from your list.
             </p>
           </ModalBody>

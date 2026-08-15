@@ -19,17 +19,25 @@ packages/
   `FitAnalysis`/`FitRequirement`, SPEC v4; optional `LearningProject` capstone, SPEC v9).
   Do not duplicate it (RULES R3). Pure + tested.
   (Demo schema + sandbox guard removed in SPEC v2.)
+- **shared/src/application.ts** — the `Application` schema + `ApplicationStatus`
+  (`pending|done|failed`, SPEC v10). `status` defaults to `done`, `bundle`/`error` optional
+  (async lifecycle back-compat). Single schema home for the persisted generation.
 - **shared/src/resume.ts** — `Resume` schema + `resumeToMarkdown` (SPEC v3). Tested. NOT
   the frozen bundle; it feeds the prompt, not the output.
 - **shared/src/rate-limit.ts** — FROZEN `canImportResume` policy (one import / 30-day
   rolling window). Pure + tested. Single home for the rate-limit rule (SPEC v3.3).
-- **server/src** — `env.ts` (Zod env), `logger.ts` (pino), `db.ts` (lazy Mongo),
+- **server/src** — `env.ts` (Zod env; incl. `WORKER_FUNCTION_NAME` — empty ⇒ in-process
+  generation), `logger.ts` (pino), `db.ts` (lazy Mongo),
   `auth.ts` (lazy Better Auth; email+password + Google social provider when creds set),
   `repository.ts` (applications incl. `updateApplicationBundle`
-  for in-place regen, `updateApplicationCoverLetter` for user edits + résumé upsert), `anthropic.ts`
-  (prompt; takes optional résumé), `resume-parse.ts` (PDF/DOCX → text via unpdf/mammoth →
-  Claude → `Resume`), `trpc.ts` (router; AppRouter type export), `index.ts`
-  (Fastify boot + `/api/health`). Anthropic SDK lives only here (R5).
+  for in-place regen, `updateApplicationCoverLetter` for user edits, `completeApplication`/
+  `failApplication` for async terminal writes + résumé upsert), `anthropic.ts`
+  (prompt; takes optional résumé), `generation.ts` (async seam: `runGenerationJob` +
+  `dispatchGeneration` — worker Lambda Event invoke when `WORKER_FUNCTION_NAME` set, else
+  in-process fire-and-forget; T-021), `resume-parse.ts` (PDF/DOCX → text via unpdf/mammoth →
+  Claude → `Resume`), `lambda/http.ts` (HTTP handler) + `lambda/worker.ts` (async generation
+  handler; both ship in the one esbuild zip), `trpc.ts` (router; AppRouter type export),
+  `index.ts` (Fastify boot + `/api/health`). Anthropic SDK lives only here (R5).
 - **client/src** — `main.tsx` (router + tRPC + query providers), `Home.tsx` (landing:
   hero + sample fit map + auth, or the signed-in JD input), `Generator.tsx` (gates the JD
   input on `getResume` — no résumé → CTA to `/resume`; `BundleSkeleton` + staged status

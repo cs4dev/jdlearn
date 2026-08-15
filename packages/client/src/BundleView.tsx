@@ -120,6 +120,8 @@ export function BundleView({
       setEditing(false);
     },
   });
+  // A pending/failed application has no bundle yet (SPEC §2 v10) — nothing to render.
+  if (!bundle) return null;
   return (
     <Card className="border border-gray-100" shadow="sm">
       <CardBody className="gap-8 p-6">
