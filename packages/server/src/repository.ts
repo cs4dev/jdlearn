@@ -56,6 +56,21 @@ export async function updateApplicationBundle(
 }
 
 /**
+ * Reset a live application to `pending` for an in-place re-generation (clears any prior error;
+ * the stale bundle stays until the worker overwrites it). Scoped to owner + live.
+ */
+export async function rependApplication(userId: string, id: string): Promise<boolean> {
+  const db = await getDb();
+  const { matchedCount } = await db
+    .collection<Application>(COLL)
+    .updateOne(
+      { userId, id, ...live },
+      { $set: { status: "pending", updatedAt: new Date().toISOString() }, $unset: { error: "" } },
+    );
+  return matchedCount === 1;
+}
+
+/**
  * Mark a live application done: set its bundle + terminal status (async worker write).
  * Scoped to owner + live (a mid-flight soft-delete is not resurrected). Returns whether one matched.
  */

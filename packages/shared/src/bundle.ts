@@ -62,3 +62,12 @@ export type GenerationBundle = z.infer<typeof GenerationBundle>;
 export function parseBundle(raw: unknown): GenerationBundle {
   return GenerationBundle.parse(raw);
 }
+
+// overallFit is DERIVED from the statuses, not the model's guess: match=1, partial=0.5,
+// gap=0, averaged ×100 and rounded. Keeps the headline score consistent with the breakdown.
+const FIT_WEIGHT = { match: 1, partial: 0.5, gap: 0 } as const;
+export function fitScore(requirements: ReadonlyArray<{ status: FitRequirement["status"] }>): number {
+  if (requirements.length === 0) return 0;
+  const total = requirements.reduce((s, r) => s + FIT_WEIGHT[r.status], 0);
+  return Math.round((100 * total) / requirements.length);
+}

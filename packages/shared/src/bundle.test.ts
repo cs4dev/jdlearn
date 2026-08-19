@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseBundle, type GenerationBundle } from "./bundle";
+import { fitScore, parseBundle, type GenerationBundle } from "./bundle";
 
 const valid: GenerationBundle = {
   roleTitle: "Backend Engineer",
@@ -66,5 +66,19 @@ describe("GenerationBundle schema (frozen)", () => {
   it("rejects a project with fewer than 2 milestones", () => {
     const bad = { ...valid, project: { ...valid.project!, milestones: valid.project!.milestones.slice(0, 1) } };
     expect(() => parseBundle(bad)).toThrow();
+  });
+});
+
+describe("fitScore — derived from statuses", () => {
+  const req = (status: "match" | "partial" | "gap") => ({ status });
+  it("weights match=1, partial=0.5, gap=0, averaged ×100 and rounded", () => {
+    expect(fitScore([req("match"), req("gap")])).toBe(50);
+    expect(fitScore([req("match"), req("partial"), req("gap")])).toBe(50); // 1.5/3
+    expect(fitScore([req("match"), req("match")])).toBe(100);
+    expect(fitScore([req("gap"), req("gap")])).toBe(0);
+    expect(fitScore([req("match"), req("match"), req("gap")])).toBe(67); // 2/3 rounds
+  });
+  it("returns 0 for no requirements (no divide-by-zero)", () => {
+    expect(fitScore([])).toBe(0);
   });
 });

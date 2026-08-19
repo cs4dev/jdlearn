@@ -6,7 +6,6 @@ import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify"
 import { z } from "zod";
 import { type Application, canImportResume, Resume } from "@jdlearn/shared";
 import { getUserId } from "./session";
-import { generateBundle } from "./anthropic";
 import { dispatchGeneration } from "./generation";
 import { importResume } from "./resume-parse";
 import {
@@ -17,11 +16,11 @@ import {
   listApplications,
   listArchivedApplications,
   purgeApplication,
+  rependApplication,
   restoreApplication,
   saveApplication,
   saveResume,
   setResumeImportAt,
-  updateApplicationBundle,
   updateApplicationCoverLetter,
 } from "./repository";
 
@@ -67,16 +66,17 @@ export const appRouter = router({
     }),
 
   // Re-run generation for an existing app against its stored JD + the current résumé,
-  // overwriting its bundle in place (SPEC §5, v5) — no new row.
+  // overwriting its bundle in place (SPEC §5, v5) — no new row. Async like `generate`:
+  // reset the row to pending, dispatch off the request path, and return it for the client
+  // to poll (the worker overwrites the bundle on completion).
   regenerateApplication: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }): Promise<Application> => {
       const existing = await getApplication(ctx.userId, input.id);
       if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
-      const resume = await getResume(ctx.userId);
-      const bundle = await generateBundle(existing.jdText, resume); // throws clear error if no key (#8)
-      await updateApplicationBundle(ctx.userId, input.id, bundle);
-      return { ...existing, bundle };
+      await rependApplication(ctx.userId, input.id); // durable pending BEFORE any Claude call
+      await dispatchGeneration({ userId: ctx.userId, appId: input.id, jdText: existing.jdText });
+      return { ...existing, status: "pending", error: undefined }; // pending — client polls by id
     }),
 
   // Let the user edit the generated cover letter in place (owner-scoped, live rows only).
