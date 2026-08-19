@@ -123,7 +123,11 @@ export function Generator() {
   const busy = generate.isPending || running;
   const regenerate = trpc.regenerateApplication.useMutation({
     onSuccess: (app) => {
-      setViewing(app);
+      // `app` is now pending (no fresh bundle yet) — poll it like a new generation.
+      // Same id as a prior done job → clear the once-per-job guard so its completion fires.
+      handledRef.current = null;
+      setViewing(null);
+      setJobId(app.id);
       utils.listApplications.invalidate();
     },
   });

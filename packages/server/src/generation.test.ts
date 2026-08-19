@@ -7,6 +7,8 @@ const saveApplication = vi.fn((_app: unknown) => Promise.resolve());
 const getResume = vi.fn((_userId: string) => Promise.resolve(null));
 const completeApplication = vi.fn((_u: string, _id: string, _b: unknown) => Promise.resolve(true));
 const failApplication = vi.fn((_u: string, _id: string, _e: string) => Promise.resolve(true));
+const getApplication = vi.fn((_u: string, _id: string) => Promise.resolve<unknown>(null));
+const rependApplication = vi.fn((_u: string, _id: string) => Promise.resolve(true));
 const generateBundle = vi.fn();
 
 vi.mock("./repository", () => ({
@@ -14,8 +16,9 @@ vi.mock("./repository", () => ({
   getResume,
   completeApplication,
   failApplication,
+  getApplication,
+  rependApplication,
   // The rest of the router's imports — present so the module loads; never called here.
-  getApplication: vi.fn(),
   listApplications: vi.fn(),
   listArchivedApplications: vi.fn(),
   deleteApplication: vi.fn(),
@@ -102,6 +105,27 @@ describe("generate mutation — off the request path (A1/A2)", () => {
     expect(saveApplication.mock.invocationCallOrder[0]!).toBeLessThan(
       dispatchGeneration.mock.invocationCallOrder[0]!,
     );
+  });
+});
+
+describe("regenerateApplication — also off the request path", () => {
+  it("resets the row to pending, dispatches, and never calls generateBundle on the request path", async () => {
+    getApplication.mockResolvedValue({ id: "app-9", userId: "u1", jdText: "stored jd", status: "done" });
+    const { appRouter } = await import("./trpc");
+    const caller = appRouter.createCaller({ userId: "u1" });
+
+    const app = await caller.regenerateApplication({ id: "app-9" });
+
+    expect(app.status).toBe("pending");
+    expect(rependApplication).toHaveBeenCalledWith("u1", "app-9");
+    expect(dispatchGeneration).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "u1", appId: "app-9", jdText: "stored jd" }),
+    );
+    // Repend (durable pending) must land before dispatch.
+    expect(rependApplication.mock.invocationCallOrder[0]!).toBeLessThan(
+      dispatchGeneration.mock.invocationCallOrder[0]!,
+    );
+    expect(generateBundle).not.toHaveBeenCalled();
   });
 });
 

@@ -1,7 +1,7 @@
 // Anthropic generation (RULES R5 — server-only). Forces a tool call so the model's
 // output is structured, then validates it against the frozen schema (RULES R3).
 import Anthropic from "@anthropic-ai/sdk";
-import { parseBundle, type GenerationBundle, type Resume, resumeToMarkdown } from "@jdlearn/shared";
+import { fitScore, parseBundle, type GenerationBundle, type Resume, resumeToMarkdown } from "@jdlearn/shared";
 import { env } from "./env";
 
 const SYSTEM = `You help a job seeker apply for a role described by a job description (JD).
@@ -12,7 +12,8 @@ fit analysis is the foundation the cover letter and plan derive from:
   the JD's concrete requirements (skills, years, responsibilities) and, for each, decide:
   "match" (résumé clearly shows it — cite the evidence), "partial" (some but not full
   evidence — note what's short), or "gap" (résumé shows none — note what's missing).
-  overallFit is a 0–100 score reflecting the balance. summary is one or two sentences.
+  The overall fit score is derived from these statuses — don't output it. summary is one or
+  two sentences.
   If NO résumé is provided, mark requirements "gap" and say the candidate should add a
   résumé for a real assessment. Base status ONLY on résumé evidence; never invent it.
 - coverLetter: a tailored cover letter (markdown ok) that FOLLOWS FROM the fit analysis —
@@ -36,7 +37,6 @@ const TOOL = {
       fitAnalysis: {
         type: "object",
         properties: {
-          overallFit: { type: "number", description: "0–100 fit score" },
           summary: { type: "string" },
           requirements: {
             type: "array",
@@ -52,7 +52,7 @@ const TOOL = {
             },
           },
         },
-        required: ["overallFit", "summary", "requirements"],
+        required: ["summary", "requirements"],
       },
       coverLetter: { type: "string" },
       learningPlan: {
@@ -122,6 +122,11 @@ export async function generateBundle(
   if (!block || block.type !== "tool_use") {
     throw new Error("model did not emit a bundle");
   }
-  // R3: model output must validate against the frozen schema or be rejected.
-  return parseBundle(block.input);
+  // overallFit is server-derived from the statuses (not the model's guess), so the headline
+  // always matches the breakdown. Set it before validating against the frozen schema (R3).
+  const raw = block.input as { fitAnalysis?: { requirements?: { status: never }[] } };
+  if (raw.fitAnalysis?.requirements) {
+    (raw.fitAnalysis as { overallFit?: number }).overallFit = fitScore(raw.fitAnalysis.requirements);
+  }
+  return parseBundle(raw);
 }
