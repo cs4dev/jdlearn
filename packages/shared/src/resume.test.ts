@@ -14,6 +14,7 @@ const valid: Resume = {
   projects: [{ name: "Bernoulli generator", link: "github.com/ada/bernoulli", bullets: ["Computed Bernoulli numbers"] }],
   education: [{ school: "Home study", degree: "Mathematics", start: "", end: "" }],
   skills: ["algorithms", "mathematics"],
+  languages: ["English — native", "French — professional"],
   updatedAt: "2026-07-01T00:00:00.000Z",
 };
 

@@ -86,6 +86,11 @@ const TOOL = {
         },
       },
       skills: { type: "array", items: { type: "string" } },
+      languages: {
+        type: "array",
+        items: { type: "string" },
+        description: 'Spoken/written languages, each with proficiency if stated, e.g. "Spanish — fluent spoken, professional written".',
+      },
     },
     required: ["fullName"],
   },
