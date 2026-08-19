@@ -37,6 +37,7 @@ export const Resume = z.object({
   projects: z.array(ResumeProject).default([]),
   education: z.array(ResumeEducation).default([]),
   skills: z.array(z.string()).default([]),
+  languages: z.array(z.string()).default([]), // free text, e.g. "Spanish — fluent spoken, professional written"
   updatedAt: z.string().default(""), // ISO 8601
 });
 export type Resume = z.infer<typeof Resume>;
@@ -76,6 +77,9 @@ export function resumeToMarkdown(r: Resume): string {
   }
   if (r.skills.filter(Boolean).length) {
     lines.push("", "## Skills", r.skills.filter(Boolean).join(", "));
+  }
+  if (r.languages.filter(Boolean).length) {
+    lines.push("", "## Languages", r.languages.filter(Boolean).join(", "));
   }
   return lines.join("\n");
 }

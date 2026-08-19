@@ -18,6 +18,7 @@ const EMPTY: Resume = {
   projects: [],
   education: [],
   skills: [],
+  languages: [],
   updatedAt: "",
 };
 
@@ -277,11 +278,26 @@ export function ResumeBuilder() {
         <Card className="border border-gray-100" shadow="sm">
           <CardBody className="gap-3 p-5">
             <SectionLabel>Skills</SectionLabel>
-            <Input
+            <Textarea
               variant="bordered"
-              placeholder="comma-separated, e.g. TypeScript, React, Go"
-              value={r.skills.join(", ")}
-              onValueChange={(v) => set("skills", splitList(v))}
+              minRows={2}
+              placeholder="one per line, e.g. TypeScript"
+              value={r.skills.join("\n")}
+              onValueChange={(v) => set("skills", splitLines(v))}
+            />
+          </CardBody>
+        </Card>
+
+        {/* Languages */}
+        <Card className="border border-gray-100" shadow="sm">
+          <CardBody className="gap-3 p-5">
+            <SectionLabel>Languages</SectionLabel>
+            <Textarea
+              variant="bordered"
+              minRows={2}
+              placeholder="one per line, e.g. Spanish — fluent spoken, professional written"
+              value={r.languages.join("\n")}
+              onValueChange={(v) => set("languages", splitLines(v))}
             />
           </CardBody>
         </Card>
@@ -314,6 +330,12 @@ const backLink = (
 
 function splitList(v: string): string[] {
   return v.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+// Keep raw lines (incl. blank/in-progress ones) while typing so Enter works;
+// empties are dropped in clean() on save.
+function splitLines(v: string): string[] {
+  return v.split("\n");
 }
 
 const esc = (s: string) =>
@@ -351,6 +373,7 @@ function resumeHtml(r: Resume): string {
     )
     .join("");
   const skills = r.skills.filter(Boolean).map(esc).join(", ");
+  const languages = r.languages.filter(Boolean).map(esc).join(", ");
   const section = (title: string, body: string) =>
     body ? `<section><h2>${title}</h2>${body}</section>` : "";
 
@@ -377,6 +400,7 @@ function resumeHtml(r: Resume): string {
   ${section("Projects", proj)}
   ${section("Education", edu)}
   ${section("Skills", skills)}
+  ${section("Languages", languages)}
 </body></html>`;
 }
 
@@ -386,5 +410,7 @@ function clean(r: Resume): Resume {
     ...r,
     experience: r.experience.map((e) => ({ ...e, bullets: e.bullets.filter((b) => b.trim()) })),
     projects: r.projects.map((p) => ({ ...p, bullets: p.bullets.filter((b) => b.trim()) })),
+    skills: r.skills.map((s) => s.trim()).filter(Boolean),
+    languages: r.languages.map((s) => s.trim()).filter(Boolean),
   };
 }
