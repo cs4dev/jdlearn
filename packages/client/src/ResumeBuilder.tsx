@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Card, CardBody, Input, Textarea } from "@heroui/react";
+import { Button, Input, Textarea } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import type { Resume } from "@jdlearn/shared";
 import { authClient } from "./auth";
 import { trpc } from "./trpc";
-import { Header } from "./Header";
+import { Header, NavLink } from "./Header";
 import { PageSkeleton } from "./Skeletons";
+import { ArrowLeft, Download, Notice, Picto, Plus, Upload } from "./sign";
 
 const EMPTY: Resume = {
   fullName: "",
@@ -22,10 +23,8 @@ const EMPTY: Resume = {
   updatedAt: "",
 };
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">{children}</h3>
-  );
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-xl font-bold tracking-tight">{children}</h2>;
 }
 
 export function ResumeBuilder() {
@@ -85,8 +84,12 @@ export function ResumeBuilder() {
     return (
       <div className="min-h-screen">
         <Header right={backLink} />
-        <p className="mx-auto max-w-3xl px-6 py-10 text-gray-500">
-          Please <Link to="/" className="text-indigo-600">sign in</Link>.
+        <p className="mx-auto max-w-3xl px-4 py-10 text-muted sm:px-6">
+          Please{" "}
+          <Link to="/" className="font-bold text-ink underline decoration-2 underline-offset-2">
+            sign in
+          </Link>
+          .
         </p>
       </div>
     );
@@ -94,15 +97,20 @@ export function ResumeBuilder() {
   return (
     <div className="min-h-screen">
       <Header right={backLink} />
-      <main className="mx-auto max-w-3xl space-y-6 px-6 pb-20 pt-4">
-        <div className="flex items-end justify-between gap-3">
+      <main className="mx-auto max-w-3xl space-y-6 px-4 pt-10 sm:px-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Your résumé</h1>
-            <p className="mt-1 text-gray-500">
+            <h1 className="text-3xl font-extrabold tracking-tight">Your résumé</h1>
+            <p className="mt-2 text-muted">
               Saved once and used to personalize every cover letter and learning plan.
             </p>
           </div>
-          <Button variant="flat" onPress={printPdf} className="shrink-0 font-medium">
+          <Button
+            variant="bordered"
+            onPress={printPdf}
+            startContent={<Download />}
+            className="shrink-0 self-start border-ink bg-white font-bold sm:self-auto"
+          >
             Download PDF
           </Button>
         </div>
@@ -125,34 +133,34 @@ export function ResumeBuilder() {
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
           disabled={importMut.isPending}
-          className={`w-full rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm transition-colors ${
-            dragOver ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"
+          className={`flex w-full items-center gap-4 rounded-md border-2 border-ink p-5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:cursor-wait ${
+            dragOver ? "bg-sign-yellow" : "bg-white hover:bg-surface-gray"
           }`}
         >
+          <Picto size="lg">
+            <Upload className="h-5 w-5" />
+          </Picto>
           {importMut.isPending ? (
-            <span className="text-gray-500">Reading your résumé…</span>
+            <span className="font-bold" aria-live="polite">
+              Reading your résumé…
+            </span>
           ) : (
-            <span className="text-gray-500">
-              <span className="font-medium text-indigo-600">Import a résumé</span> — drag a
-              PDF, Word, or Markdown file here, or click to browse.
+            <span>
+              <span className="block text-lg font-extrabold">Import a résumé</span>
+              <span className="text-sm text-ink-soft">
+                Drag a PDF, Word, or Markdown file here, or click to browse.
+              </span>
             </span>
           )}
         </button>
-        {importMut.error && (
-          <div className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-            {importMut.error.message}
-          </div>
-        )}
+        {importMut.error && <Notice>{importMut.error.message}</Notice>}
         {importMut.isSuccess && !importMut.isPending && (
-          <div className="rounded-lg bg-success-50 px-3 py-2 text-sm text-success">
-            Imported — review the fields below, then Save.
-          </div>
+          <Notice tone="ok">Imported — review the fields below, then Save.</Notice>
         )}
 
         {/* Contact */}
-        <Card className="border border-gray-100" shadow="sm">
-          <CardBody className="gap-4 p-5">
-            <SectionLabel>Contact</SectionLabel>
+        <section className="flex flex-col gap-4 rounded-md border border-rule bg-white p-5 sm:p-6">
+            <SectionTitle>Contact</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
               <Input label="Full name" variant="bordered" isRequired value={r.fullName} onValueChange={(v) => set("fullName", v)} />
               <Input label="Email" variant="bordered" value={r.email} onValueChange={(v) => set("email", v)} />
@@ -165,13 +173,11 @@ export function ResumeBuilder() {
               value={r.links.join(", ")}
               onValueChange={(v) => set("links", splitList(v))}
             />
-          </CardBody>
-        </Card>
+          </section>
 
         {/* Summary */}
-        <Card className="border border-gray-100" shadow="sm">
-          <CardBody className="gap-3 p-5">
-            <SectionLabel>Summary</SectionLabel>
+        <section className="flex flex-col gap-3 rounded-md border border-rule bg-white p-5 sm:p-6">
+            <SectionTitle>Summary</SectionTitle>
             <Textarea
               variant="bordered"
               minRows={3}
@@ -179,21 +185,19 @@ export function ResumeBuilder() {
               value={r.summary}
               onValueChange={(v) => set("summary", v)}
             />
-          </CardBody>
-        </Card>
+          </section>
 
         {/* Experience */}
-        <Card className="border border-gray-100" shadow="sm">
-          <CardBody className="gap-4 p-5">
+        <section className="flex flex-col gap-4 rounded-md border border-rule bg-white p-5 sm:p-6">
             <div className="flex items-center justify-between">
-              <SectionLabel>Experience</SectionLabel>
-              <Button size="sm" variant="flat" onPress={() => set("experience", [...r.experience, { company: "", title: "", start: "", end: "", bullets: [] }])}>
-                + Add
+              <SectionTitle>Experience</SectionTitle>
+              <Button size="sm" variant="bordered" className="border-ink bg-white font-bold" startContent={<Plus />} onPress={() => set("experience", [...r.experience, { company: "", title: "", start: "", end: "", bullets: [] }])}>
+                Add
               </Button>
             </div>
-            {r.experience.length === 0 && <p className="text-sm text-gray-500">No roles yet.</p>}
+            {r.experience.length === 0 && <p className="text-sm text-muted">No roles yet.</p>}
             {r.experience.map((e, i) => (
-              <div key={i} className="space-y-3 rounded-xl border border-gray-100 p-4">
+              <div key={i} className="space-y-3 border-t border-rule pt-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input size="sm" label="Title" variant="bordered" value={e.title} onValueChange={(v) => updateAt("experience", i, { ...e, title: v })} />
                   <Input size="sm" label="Company" variant="bordered" value={e.company} onValueChange={(v) => updateAt("experience", i, { ...e, company: v })} />
@@ -208,26 +212,24 @@ export function ResumeBuilder() {
                   value={e.bullets.join("\n")}
                   onValueChange={(v) => updateAt("experience", i, { ...e, bullets: v.split("\n") })}
                 />
-                <Button size="sm" variant="light" color="danger" onPress={() => removeAt("experience", i)}>
+                <Button size="sm" variant="light" color="danger" className="font-bold" onPress={() => removeAt("experience", i)}>
                   Remove
                 </Button>
               </div>
             ))}
-          </CardBody>
-        </Card>
+          </section>
 
         {/* Projects */}
-        <Card className="border border-gray-100" shadow="sm">
-          <CardBody className="gap-4 p-5">
+        <section className="flex flex-col gap-4 rounded-md border border-rule bg-white p-5 sm:p-6">
             <div className="flex items-center justify-between">
-              <SectionLabel>Projects</SectionLabel>
-              <Button size="sm" variant="flat" onPress={() => set("projects", [...r.projects, { name: "", link: "", bullets: [] }])}>
-                + Add
+              <SectionTitle>Projects</SectionTitle>
+              <Button size="sm" variant="bordered" className="border-ink bg-white font-bold" startContent={<Plus />} onPress={() => set("projects", [...r.projects, { name: "", link: "", bullets: [] }])}>
+                Add
               </Button>
             </div>
-            {r.projects.length === 0 && <p className="text-sm text-gray-500">No projects yet.</p>}
+            {r.projects.length === 0 && <p className="text-sm text-muted">No projects yet.</p>}
             {r.projects.map((p, i) => (
-              <div key={i} className="space-y-3 rounded-xl border border-gray-100 p-4">
+              <div key={i} className="space-y-3 border-t border-rule pt-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input size="sm" label="Name" variant="bordered" value={p.name} onValueChange={(v) => updateAt("projects", i, { ...p, name: v })} />
                   <Input size="sm" label="Link" variant="bordered" value={p.link} onValueChange={(v) => updateAt("projects", i, { ...p, link: v })} />
@@ -240,44 +242,40 @@ export function ResumeBuilder() {
                   value={p.bullets.join("\n")}
                   onValueChange={(v) => updateAt("projects", i, { ...p, bullets: v.split("\n") })}
                 />
-                <Button size="sm" variant="light" color="danger" onPress={() => removeAt("projects", i)}>
+                <Button size="sm" variant="light" color="danger" className="font-bold" onPress={() => removeAt("projects", i)}>
                   Remove
                 </Button>
               </div>
             ))}
-          </CardBody>
-        </Card>
+          </section>
 
         {/* Education */}
-        <Card className="border border-gray-100" shadow="sm">
-          <CardBody className="gap-4 p-5">
+        <section className="flex flex-col gap-4 rounded-md border border-rule bg-white p-5 sm:p-6">
             <div className="flex items-center justify-between">
-              <SectionLabel>Education</SectionLabel>
-              <Button size="sm" variant="flat" onPress={() => set("education", [...r.education, { school: "", degree: "", start: "", end: "" }])}>
-                + Add
+              <SectionTitle>Education</SectionTitle>
+              <Button size="sm" variant="bordered" className="border-ink bg-white font-bold" startContent={<Plus />} onPress={() => set("education", [...r.education, { school: "", degree: "", start: "", end: "" }])}>
+                Add
               </Button>
             </div>
-            {r.education.length === 0 && <p className="text-sm text-gray-500">Nothing yet.</p>}
+            {r.education.length === 0 && <p className="text-sm text-muted">Nothing yet.</p>}
             {r.education.map((ed, i) => (
-              <div key={i} className="space-y-3 rounded-xl border border-gray-100 p-4">
+              <div key={i} className="space-y-3 border-t border-rule pt-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input size="sm" label="School" variant="bordered" value={ed.school} onValueChange={(v) => updateAt("education", i, { ...ed, school: v })} />
                   <Input size="sm" label="Degree" variant="bordered" value={ed.degree} onValueChange={(v) => updateAt("education", i, { ...ed, degree: v })} />
                   <Input size="sm" label="Start" variant="bordered" value={ed.start} onValueChange={(v) => updateAt("education", i, { ...ed, start: v })} />
                   <Input size="sm" label="End" variant="bordered" value={ed.end} onValueChange={(v) => updateAt("education", i, { ...ed, end: v })} />
                 </div>
-                <Button size="sm" variant="light" color="danger" onPress={() => removeAt("education", i)}>
+                <Button size="sm" variant="light" color="danger" className="font-bold" onPress={() => removeAt("education", i)}>
                   Remove
                 </Button>
               </div>
             ))}
-          </CardBody>
-        </Card>
+          </section>
 
         {/* Skills */}
-        <Card className="border border-gray-100" shadow="sm">
-          <CardBody className="gap-3 p-5">
-            <SectionLabel>Skills</SectionLabel>
+        <section className="flex flex-col gap-3 rounded-md border border-rule bg-white p-5 sm:p-6">
+            <SectionTitle>Skills</SectionTitle>
             <Textarea
               variant="bordered"
               minRows={2}
@@ -285,13 +283,11 @@ export function ResumeBuilder() {
               value={r.skills.join("\n")}
               onValueChange={(v) => set("skills", splitLines(v))}
             />
-          </CardBody>
-        </Card>
+          </section>
 
         {/* Languages */}
-        <Card className="border border-gray-100" shadow="sm">
-          <CardBody className="gap-3 p-5">
-            <SectionLabel>Languages</SectionLabel>
+        <section className="flex flex-col gap-3 rounded-md border border-rule bg-white p-5 sm:p-6">
+            <SectionTitle>Languages</SectionTitle>
             <Textarea
               variant="bordered"
               minRows={2}
@@ -299,15 +295,24 @@ export function ResumeBuilder() {
               value={r.languages.join("\n")}
               onValueChange={(v) => set("languages", splitLines(v))}
             />
-          </CardBody>
-        </Card>
+          </section>
 
-        <div className="flex items-center gap-3">
-          <Button color="primary" className="font-medium" isDisabled={!r.fullName.trim()} isLoading={save.isPending} onPress={() => save.mutate(clean(r))}>
+        {/* Save stays in reach on a long form: a sticky strip at the bottom of the viewport. */}
+        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-ink bg-concourse/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
+          <Button color="primary" size="lg" className="font-bold" isDisabled={!r.fullName.trim()} isLoading={save.isPending} onPress={() => save.mutate(clean(r))}>
             Save résumé
           </Button>
-          {save.isSuccess && !save.isPending && <span className="text-sm text-success">Saved.</span>}
-          {save.error && <span className="text-sm text-danger">{save.error.message}</span>}
+          {save.isSuccess && !save.isPending && (
+            <span role="status" className="text-sm font-bold">
+              Saved.
+            </span>
+          )}
+          {!r.fullName.trim() && <span className="text-sm text-muted">Add your full name to save.</span>}
+          {save.error && (
+            <span role="alert" className="text-sm font-bold text-stop">
+              {save.error.message}
+            </span>
+          )}
         </div>
       </main>
     </div>
@@ -323,9 +328,9 @@ export function ResumeBuilder() {
 }
 
 const backLink = (
-  <Button as={Link} to="/" size="sm" variant="light">
-    ← Back
-  </Button>
+  <NavLink to="/">
+    <ArrowLeft /> Back
+  </NavLink>
 );
 
 function splitList(v: string): string[] {
@@ -380,10 +385,10 @@ function resumeHtml(r: Resume): string {
   return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(r.fullName)} — résumé</title>
 <style>
   * { box-sizing: border-box; }
-  body { font: 13px/1.5 -apple-system, Segoe UI, Roboto, sans-serif; color: #1f2937; max-width: 720px; margin: 40px auto; padding: 0 24px; }
+  body { font: 13px/1.5 "Atkinson Hyperlegible Next", -apple-system, Segoe UI, Roboto, sans-serif; color: #0b0b0b; max-width: 720px; margin: 40px auto; padding: 0 24px; }
   h1 { font-size: 26px; margin: 0 0 2px; }
   .contact { color: #6b7280; font-size: 12px; margin-bottom: 18px; }
-  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #6366f1; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin: 20px 0 10px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #0b0b0b; border-bottom: 2px solid #0b0b0b; padding-bottom: 4px; margin: 20px 0 10px; }
   .item { margin-bottom: 10px; }
   .item h3 { font-size: 13px; margin: 0; display: flex; justify-content: space-between; gap: 12px; }
   .item h3 span { font-weight: 400; color: #6b7280; white-space: nowrap; }

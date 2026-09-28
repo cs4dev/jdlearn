@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Button, Card, CardBody, Input, Link } from "@heroui/react";
+import { Button, Input } from "@heroui/react";
+import { ArrowSquare } from "./sign";
 import { authClient } from "./auth";
 
-// Hairline eye toggle — matches the Logo's stroke language, not an emoji. `off`
+// Eye toggle in the pictogram stroke language, not an emoji. `off`
 // adds the slash (password currently visible → click to hide).
 function EyeIcon({ off = false }: { off?: boolean }) {
   return (
@@ -10,9 +11,8 @@ function EyeIcon({ off = false }: { off?: boolean }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeWidth="2.25"
+      strokeLinecap="square"
       className="h-5 w-5"
       aria-hidden
     >
@@ -68,107 +68,120 @@ export function AuthForm({
     else if (mode === "signup") sessionStorage.setItem("jdlearn:justSignedUp", "1");
   }
 
+  const field = { label: "text-sm font-bold", inputWrapper: "bg-white", input: "placeholder:text-default-500" };
   return (
-    <Card className="h-full w-full max-w-sm border border-gray-100 shadow-sm" shadow="none">
-      <CardBody className="justify-center gap-5 p-6">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight">
-            {mode === "signup" ? "Create your account" : "Welcome back"}
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            {mode === "signup" ? "Start turning JDs into applications." : "Sign in to continue."}
-          </p>
-        </div>
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <Input
-            type="email"
-            label="Email"
-            variant="bordered"
-            value={email}
-            onValueChange={setEmail}
-            isRequired
-          />
-          <Input
-            type={showPw ? "text" : "password"}
-            label="Password"
-            variant="bordered"
-            value={password}
-            onValueChange={setPassword}
-            minLength={8}
-            description="8+ characters"
-            isRequired
-            endContent={
-              <button
-                type="button"
-                aria-label={showPw ? "Hide password" : "Show password"}
-                onClick={() => setShowPw((v) => !v)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <EyeIcon off={showPw} />
-              </button>
-            }
-          />
-          {error && <p className="text-sm text-danger">{error}</p>}
-          <Button
-            type="submit"
-            color="primary"
-            isLoading={busy}
-            className="font-medium"
-            endContent={!busy && <span aria-hidden>→</span>}
-          >
-            {mode === "signup" ? "Sign up" : "Sign in"}
-          </Button>
-        </form>
-
-        <div className="flex items-center gap-3 text-xs text-gray-500">
-          <span className="h-px flex-1 bg-gray-200" />
-          or
-          <span className="h-px flex-1 bg-gray-200" />
-        </div>
-
-        <Button
+    <div className="flex h-full w-full flex-col justify-center gap-4 rounded-md border-2 border-ink bg-white p-6">
+      <div>
+        <h2 className="text-2xl font-extrabold tracking-tight">
+          {mode === "signup" ? "Create your account" : "Welcome back"}
+        </h2>
+        <p className="mt-1 text-muted">
+          {mode === "signup" ? "Start turning JDs into applications." : "Sign in to continue."}
+        </p>
+      </div>
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <Input
+          type="email"
+          label="Email"
+          labelPlacement="outside"
+          placeholder="you@example.com"
           variant="bordered"
-          className="font-medium"
-          isDisabled={busy}
-          onPress={async () => {
-            setError(null);
-            // Flag a possible new signup so the first authenticated screen greets them.
-            // The résumé gate that reads this only shows for résumé-less users, so a
-            // returning Google user rarely sees it. Cleared if the redirect never happens.
-            sessionStorage.setItem("jdlearn:justSignedUp", "1");
-            // Redirects to Google, then back to the app origin on success (dev client runs
-            // on a different port than the auth server, so use an absolute origin, not "/").
-            const res = await authClient.signIn.social({
-              provider: "google",
-              callbackURL: window.location.origin,
-            });
-            if (res?.error) {
-              sessionStorage.removeItem("jdlearn:justSignedUp");
-              setError(res.error.message ?? "Google sign-in is unavailable.");
-            }
-          }}
-          startContent={<GoogleIcon />}
+          autoComplete="email"
+          classNames={field}
+          value={email}
+          onValueChange={setEmail}
+          isRequired
+        />
+        <Input
+          type={showPw ? "text" : "password"}
+          label="Password"
+          labelPlacement="outside"
+          placeholder="Your password"
+          variant="bordered"
+          autoComplete={mode === "signup" ? "new-password" : "current-password"}
+          classNames={field}
+          value={password}
+          onValueChange={setPassword}
+          minLength={8}
+          description="8+ characters"
+          isRequired
+          endContent={
+            <button
+              type="button"
+              aria-label={showPw ? "Hide password" : "Show password"}
+              onClick={() => setShowPw((v) => !v)}
+              className="rounded-[3px] text-muted outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-ink"
+            >
+              <EyeIcon off={showPw} />
+            </button>
+          }
+        />
+        {error && (
+          <p role="alert" className="text-sm font-bold text-stop">
+            {error}
+          </p>
+        )}
+        <Button
+          type="submit"
+          color="primary"
+          size="lg"
+          isLoading={busy}
+          className="font-bold"
+          startContent={!busy && <ArrowSquare />}
         >
-          Continue with Google
+          {mode === "signup" ? "Sign up" : "Sign in"}
         </Button>
-        <p className="text-center text-sm text-gray-500">
-          {mode === "signup" ? "Already have an account? " : "New here? "}
-          <Link
-            as="button"
-            size="sm"
-            onPress={() => {
-              setError(null);
-              setMode(mode === "signup" ? "signin" : "signup");
-            }}
-          >
-            {mode === "signup" ? "Sign in" : "Create one"}
-          </Link>
-        </p>
+      </form>
 
-        <p className="text-center text-xs text-gray-500">
-          Your résumé and job descriptions stay private to your account.
-        </p>
-      </CardBody>
-    </Card>
+      <div className="flex items-center gap-3 text-sm font-bold text-muted">
+        <span className="h-px flex-1 bg-rule" />
+        or
+        <span className="h-px flex-1 bg-rule" />
+      </div>
+
+      <Button
+        variant="bordered"
+        size="lg"
+        className="w-full border-ink bg-white font-bold"
+        isDisabled={busy}
+        onPress={async () => {
+          setError(null);
+          // Flag a possible new signup so the first authenticated screen greets them.
+          // The résumé gate that reads this only shows for résumé-less users, so a
+          // returning Google user rarely sees it. Cleared if the redirect never happens.
+          sessionStorage.setItem("jdlearn:justSignedUp", "1");
+          // Redirects to Google, then back to the app origin on success (dev client runs
+          // on a different port than the auth server, so use an absolute origin, not "/").
+          const res = await authClient.signIn.social({
+            provider: "google",
+            callbackURL: window.location.origin,
+          });
+          if (res?.error) {
+            sessionStorage.removeItem("jdlearn:justSignedUp");
+            setError(res.error.message ?? "Google sign-in is unavailable.");
+          }
+        }}
+        startContent={<GoogleIcon />}
+      >
+        Continue with Google
+      </Button>
+      <p className="text-center text-sm text-muted">
+        {mode === "signup" ? "Already have an account? " : "New here? "}
+        <button
+          type="button"
+          className="rounded-[3px] font-bold text-ink underline decoration-2 underline-offset-2 outline-none hover:decoration-4 focus-visible:ring-2 focus-visible:ring-ink"
+          onClick={() => {
+            setError(null);
+            setMode(mode === "signup" ? "signin" : "signup");
+          }}
+        >
+          {mode === "signup" ? "Sign in" : "Create one"}
+        </button>
+      </p>
+
+      <p className="text-center text-xs text-muted">
+        Your résumé and job descriptions stay private to your account.
+      </p>
+    </div>
   );
 }

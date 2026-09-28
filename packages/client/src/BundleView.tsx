@@ -1,31 +1,34 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
-import { Button, Card, CardBody, Divider, Textarea } from "@heroui/react";
+import { Button, Textarea } from "@heroui/react";
 import type { Application, LearningProject } from "@jdlearn/shared";
 import { trpc } from "./trpc";
 import { FitMap } from "./FitMap";
+import { ArrowRight, Check, Copy as CopyGlyph, Flag, Notice, Pencil, Picto } from "./sign";
 
 // Minimal element styling (no typography plugin installed) — cover letters are
 // paragraphs + emphasis + the occasional list.
 const MD_COMPONENTS = {
-  p: (props: { children?: React.ReactNode }) => <p className="mb-3" {...props} />,
+  p: (props: { children?: React.ReactNode }) => <p className="mb-4" {...props} />,
   strong: (props: { children?: React.ReactNode }) => (
-    <strong className="font-semibold text-gray-900" {...props} />
+    <strong className="font-bold text-ink" {...props} />
   ),
   ul: (props: { children?: React.ReactNode }) => (
-    <ul className="mb-3 list-inside list-disc" {...props} />
+    <ul className="mb-4 list-outside list-disc pl-5" {...props} />
   ),
   ol: (props: { children?: React.ReactNode }) => (
-    <ol className="mb-3 list-inside list-decimal" {...props} />
+    <ol className="mb-4 list-outside list-decimal pl-5" {...props} />
   ),
   a: (props: { children?: React.ReactNode; href?: string }) => (
-    <a className="text-indigo-600 underline" {...props} />
+    <a className="font-bold underline decoration-2 underline-offset-2" {...props} />
   ),
 };
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+// "Icon square + label on a rule" — the sign grammar for a section head.
+function SectionTitle({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+    <h3 className="flex items-center gap-2.5 text-xl font-bold tracking-tight">
+      <Picto size="sm">{icon}</Picto>
       {children}
     </h3>
   );
@@ -46,39 +49,31 @@ function CopyButton({
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+  const icon = copied ? <Check /> : <CopyGlyph />;
   if (iconOnly) {
     return (
       <Button
         size="sm"
-        variant="light"
+        variant="bordered"
         isIconOnly
         aria-label={copied ? "Copied" : label}
-        color={copied ? "success" : "default"}
+        className="border-ink bg-white"
         onPress={copy}
       >
-        {copied ? "✓" : <CopyIcon />}
+        {icon}
       </Button>
     );
   }
   return (
     <Button
       size="sm"
-      variant="flat"
-      color={copied ? "success" : "primary"}
-      className="font-medium"
+      variant="bordered"
+      className="border-ink bg-white font-bold"
+      startContent={icon}
       onPress={copy}
     >
       {copied ? "Copied" : label}
     </Button>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <rect x="9" y="9" width="13" height="13" rx="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
   );
 }
 
@@ -120,155 +115,170 @@ export function BundleView({
       setEditing(false);
     },
   });
+  // Opening an application (often from the board below) swaps content far above the
+  // row — bring it into view so the click visibly lands.
+  const top = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    top.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+  }, [app.id]);
   // A pending/failed application has no bundle yet (SPEC §2 v10) — nothing to render.
   if (!bundle) return null;
   return (
-    <Card className="border border-gray-100" shadow="sm">
-      <CardBody className="gap-8 p-6">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-indigo-600">Tailored for</p>
-          <h2 className="text-2xl font-bold tracking-tight">{bundle.roleTitle}</h2>
-        </div>
+    <article ref={top} className="scroll-mt-4 space-y-10">
+      <header>
+        <p className="text-sm font-bold text-muted">Tailored for</p>
+        <h2 className="text-3xl font-extrabold leading-tight tracking-tight">{bundle.roleTitle}</h2>
+      </header>
 
-        <Divider />
+      {/* Fit map — the JD↔résumé connection. Guarded: pre-v4 stored bundles lack it. */}
+      {bundle.fitAnalysis && <FitMap fit={bundle.fitAnalysis} />}
 
-        {/* Fit map — the JD↔résumé connection. Guarded: pre-v4 stored bundles lack it. */}
-        {bundle.fitAnalysis && <FitMap fit={bundle.fitAnalysis} />}
-
-        <section>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <SectionLabel>Cover letter</SectionLabel>
-            <div className="flex items-center gap-2">
-              {editable && !editing && (
-                <Button
-                  size="sm"
-                  variant="flat"
-                  className="font-medium"
-                  onPress={() => {
-                    setDraft(bundle.coverLetter);
-                    setEditing(true);
-                  }}
-                >
-                  Edit
-                </Button>
-              )}
-              {!editing && <CopyButton text={bundle.coverLetter} />}
-            </div>
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-ink pb-3">
+          <SectionTitle icon={<Pencil className="h-3.5 w-3.5" />}>Cover letter</SectionTitle>
+          <div className="flex items-center gap-2">
+            {editable && !editing && (
+              <Button
+                size="sm"
+                variant="bordered"
+                className="border-ink bg-white font-bold"
+                startContent={<Pencil />}
+                onPress={() => {
+                  setDraft(bundle.coverLetter);
+                  setEditing(true);
+                }}
+              >
+                Edit
+              </Button>
+            )}
+            {!editing && <CopyButton text={bundle.coverLetter} />}
           </div>
-          {editing ? (
-            <div className="space-y-2">
-              <Textarea
-                aria-label="Edit cover letter"
-                minRows={10}
-                value={draft}
-                onValueChange={setDraft}
-                description="Edit as Markdown — formatting renders after you save."
-                classNames={{ input: "text-sm leading-relaxed" }}
-              />
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  color="primary"
-                  className="font-medium"
-                  isDisabled={!draft.trim()}
-                  isLoading={save.isPending}
-                  onPress={() => save.mutate({ id: app.id, coverLetter: draft })}
-                >
-                  {save.isPending ? "Saving…" : "Save"}
-                </Button>
-                <Button size="sm" variant="light" onPress={() => setEditing(false)}>
-                  Cancel
-                </Button>
-              </div>
-              {save.error && (
-                <div className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-                  {save.error.message}
-                </div>
-              )}
+        </div>
+        {editing ? (
+          <div className="space-y-3">
+            <Textarea
+              aria-label="Edit cover letter"
+              variant="bordered"
+              minRows={12}
+              value={draft}
+              onValueChange={setDraft}
+              description="Edit as Markdown — formatting renders after you save."
+              classNames={{ inputWrapper: "bg-white", input: "text-base leading-relaxed" }}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                color="primary"
+                className="font-bold"
+                isDisabled={!draft.trim()}
+                isLoading={save.isPending}
+                onPress={() => save.mutate({ id: app.id, coverLetter: draft })}
+              >
+                {save.isPending ? "Saving…" : "Save"}
+              </Button>
+              <Button variant="light" className="font-bold" onPress={() => setEditing(false)}>
+                Cancel
+              </Button>
             </div>
-          ) : (
-            <div className="rounded-xl bg-gray-50 p-4 text-sm leading-relaxed text-gray-800 [&>*:last-child]:mb-0">
+            {save.error && <Notice>{save.error.message}</Notice>}
+          </div>
+        ) : (
+          <div className="rounded-md border border-rule bg-white px-5 py-6 text-base leading-relaxed text-ink-soft sm:px-8 sm:py-8">
+            <div className="max-w-[68ch] [&>*:last-child]:mb-0">
               <Markdown components={MD_COMPONENTS}>{bundle.coverLetter}</Markdown>
             </div>
-          )}
-        </section>
+          </div>
+        )}
+      </section>
 
-        <section>
-          <SectionLabel>Learning plan</SectionLabel>
-          <ol className="space-y-4">
-            {bundle.learningPlan.map((s, i) => (
-              <li key={i} className="flex gap-3">
-                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
+      <section className="space-y-4">
+        <div className="border-b-2 border-ink pb-3">
+          <SectionTitle icon={<ArrowRight className="h-3.5 w-3.5" />}>Learning plan</SectionTitle>
+        </div>
+        {/* The route: numbered stops joined by a line, ending at the capstone "gate". */}
+        <ol>
+          {bundle.learningPlan.map((s, i) => {
+            const last = i === bundle.learningPlan.length - 1 && !bundle.project;
+            return (
+              <li
+                key={i}
+                className={`relative pb-6 pl-12 ${
+                  last
+                    ? ""
+                    : "before:absolute before:bottom-0 before:left-[15px] before:top-8 before:w-0.5 before:bg-ink"
+                }`}
+              >
+                <span className="absolute left-0 top-0 grid h-8 w-8 place-items-center rounded-[3px] bg-ink text-sm font-extrabold text-white tabular-nums">
                   {i + 1}
                 </span>
-                <div>
-                  <p className="font-medium">
-                    {s.title}
-                    {s.estimateHours ? (
-                      <span className="ml-2 text-xs font-normal text-gray-500">
-                        ~{s.estimateHours}h
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="text-sm text-gray-600">{s.detail}</p>
-                  {s.resources.length > 0 && (
-                    <ul className="mt-1 list-inside list-disc text-sm text-indigo-600">
-                      {s.resources.map((r, j) => (
-                        <li key={j}>{r}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ol>
-
-          {bundle.project && (
-            <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
-                  Capstone project
+                <p className="pt-1 font-bold leading-snug">
+                  {s.title}
+                  {s.estimateHours ? (
+                    <span className="ml-2 text-sm font-normal text-muted">~{s.estimateHours}h</span>
+                  ) : null}
                 </p>
+                <p className="mt-1 text-sm text-muted">{s.detail}</p>
+                {s.resources.length > 0 && (
+                  <ul className="mt-2 list-outside list-disc space-y-0.5 pl-5 text-sm text-ink-soft">
+                    {s.resources.map((r, j) => (
+                      <li key={j}>{r}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+
+        {bundle.project && (
+          <div className="relative -mt-4 pt-4 before:absolute before:left-[15px] before:top-0 before:h-4 before:w-0.5 before:bg-ink">
+            {/* The flag is the route's last stop; the capstone hangs below it. */}
+            <div className="flex items-center gap-4">
+              <Picto tone="sign">
+                <Flag />
+              </Picto>
+              <p className="font-bold">Capstone project</p>
+            </div>
+            <div className="mt-3 rounded-md border-2 border-ink bg-white p-5">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-lg font-extrabold leading-snug">{bundle.project.title}</p>
                 <CopyButton text={projectPrompt(bundle.project)} label="Copy project prompt" iconOnly />
               </div>
-              <p className="mt-1 font-semibold text-gray-900">{bundle.project.title}</p>
-              <p className="mt-1 text-sm text-gray-600">{bundle.project.summary}</p>
+              <p className="mt-2 text-sm text-muted">{bundle.project.summary}</p>
               {bundle.project.techStack.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Tech stack">
                   {bundle.project.techStack.map((t, i) => (
-                    <span
+                    <li
                       key={i}
-                      className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-indigo-100"
+                      className="rounded-[3px] border border-ink px-1.5 py-0.5 text-xs font-bold"
                     >
                       {t}
-                    </span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
-              <ol className="mt-3 space-y-2">
+              <ol className="mt-4 space-y-3 border-t-2 border-ink pt-4">
                 {bundle.project.milestones.map((m, i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-indigo-200 text-[11px] font-semibold text-indigo-800">
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-[3px] bg-ink text-xs font-extrabold text-white tabular-nums">
                       {i + 1}
                     </span>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-bold">
                         {m.title}
                         {m.estimateHours ? (
-                          <span className="ml-2 text-xs font-normal text-gray-500">
-                            ~{m.estimateHours}h
-                          </span>
+                          <span className="ml-2 font-normal text-muted">~{m.estimateHours}h</span>
                         ) : null}
                       </p>
-                      <p className="text-sm text-gray-600">{m.detail}</p>
+                      <p className="text-sm text-muted">{m.detail}</p>
                     </div>
                   </li>
                 ))}
               </ol>
             </div>
-          )}
-        </section>
-      </CardBody>
-    </Card>
+          </div>
+        )}
+      </section>
+    </article>
   );
 }

@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   addToast,
   Button,
-  Card,
-  CardBody,
   Modal,
   ModalBody,
   ModalContent,
@@ -16,6 +14,7 @@ import type { Application } from "@jdlearn/shared";
 import { trpc } from "./trpc";
 import { BundleView } from "./BundleView";
 import { BundleSkeleton, RowsSkeleton } from "./Skeletons";
+import { ArrowRight, ArrowSquare, Board, BoardEmpty, BoardRow, Cross, Notice, Picto, Refresh } from "./sign";
 
 // The generation runs fit-first (read JD → map to résumé → derive letter + plan).
 // Advance the status through those real stages so the ~60s wait reads as progress,
@@ -36,7 +35,8 @@ function GeneratingStatus() {
     return () => clearInterval(t);
   }, []);
   return (
-    <p className="text-sm text-gray-500" aria-live="polite">
+    <p className="flex items-center gap-2 text-sm font-bold" aria-live="polite">
+      <span className="h-2.5 w-2.5 bg-sign-yellow ring-2 ring-ink motion-safe:animate-pulse" aria-hidden />
       {GEN_STEPS[step]}
     </p>
   );
@@ -87,7 +87,7 @@ export function Generator() {
     if (j.status === "done") {
       if (handledRef.current === jobId) return;
       handledRef.current = jobId;
-      addToast({ title: "Your application is ready", color: "success" });
+      addToast({ title: "Your application is ready" });
       setViewing(j);
       setJobId(null);
       utils.listApplications.invalidate();
@@ -141,19 +141,23 @@ export function Generator() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {resume.isPending ? (
         <RowsSkeleton />
       ) : !resume.data ? (
-        <Card className="border border-indigo-100 bg-indigo-50/40" shadow="sm">
-          <CardBody className="items-start gap-3 p-5">
+        // Wayfinding: the one next step, signed in yellow.
+        <div className="flex flex-col gap-4 rounded-md bg-sign-yellow p-5 ring-2 ring-ink sm:flex-row sm:items-start sm:p-6">
+          <Picto size="lg">
+            <ArrowRight className="h-6 w-6" />
+          </Picto>
+          <div className="space-y-3">
             {justSignedUp && (
-              <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
-                You're in — one quick step
-              </p>
+              <p className="text-sm font-bold text-on-yellow-muted">You're in — one quick step</p>
             )}
-            <h2 className="text-lg font-semibold text-gray-900">Add your résumé first</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-2xl font-extrabold leading-tight tracking-tight">
+              Add your résumé first
+            </h2>
+            <p className="max-w-prose text-on-yellow-muted">
               Your cover letter and fit map are built from your real experience. Add a
               résumé — build it or import a PDF, Word, or Markdown file — before pasting a
               job description.
@@ -162,33 +166,35 @@ export function Generator() {
               as={Link}
               to="/resume"
               color="primary"
-              className="font-medium"
-              endContent={<span aria-hidden>→</span>}
+              size="lg"
+              className="font-bold"
+              startContent={<ArrowSquare />}
             >
               Add your résumé
             </Button>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
       ) : (
-      <Card className="border border-gray-100" shadow="sm">
-        <CardBody className="gap-4 p-5">
+        <div className="space-y-4 rounded-md border border-rule bg-white p-5 sm:p-6">
           <Textarea
             label="Job description"
             labelPlacement="outside"
+            variant="bordered"
             placeholder="Paste the full job description here…"
             minRows={8}
             value={jd}
             onValueChange={setJd}
-            classNames={{ input: "font-mono text-sm" }}
+            classNames={{ label: "text-base font-bold", input: "font-mono text-sm placeholder:text-default-500" }}
           />
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-4">
             <Button
               color="primary"
-              className="font-medium"
+              size="lg"
+              className="font-bold"
               isDisabled={!jd.trim() || busy}
               isLoading={busy}
               onPress={() => generate.mutate({ jdText: jd })}
-              endContent={!busy && <span aria-hidden>→</span>}
+              startContent={!busy && <ArrowSquare />}
             >
               {busy ? "Generating…" : "Generate"}
             </Button>
@@ -196,59 +202,40 @@ export function Generator() {
           </div>
           {/* The dispatch itself failed (couldn't even queue the job). */}
           {generate.error && (
-            <div className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-              <p>Couldn't start generation: {generate.error.message}</p>
-              <button
-                type="button"
-                className="mt-1 font-medium underline underline-offset-2"
-                onClick={() => generate.mutate({ jdText: jd })}
-              >
-                Try again
-              </button>
-            </div>
+            <Notice onRetry={() => generate.mutate({ jdText: jd })}>
+              Couldn't start generation: {generate.error.message}
+            </Notice>
           )}
           {/* The generation ran but failed — surface its error + a Retry that re-fires it. */}
           {failedJob && (
-            <div className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-              <p>Generation failed: {failedJob.error ?? "Something went wrong."}</p>
-              <button
-                type="button"
-                className="mt-1 font-medium underline underline-offset-2"
-                onClick={() => generate.mutate({ jdText: failedJob.jdText })}
-              >
-                Try again
-              </button>
-            </div>
+            <Notice onRetry={() => generate.mutate({ jdText: failedJob.jdText })}>
+              Generation failed: {failedJob.error ?? "Something went wrong."}
+            </Notice>
           )}
-        </CardBody>
-      </Card>
+        </div>
       )}
 
       {/* Preview the incoming bundle's shape during the long generation. */}
       {running && <BundleSkeleton />}
 
       {viewing && (
-        <div className="space-y-3">
-          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+        <div className="space-y-4">
+          <div className="flex flex-col items-start gap-2 border-y border-rule py-3 sm:flex-row sm:items-center sm:gap-3">
             <Button
               size="sm"
-              variant="flat"
-              color="primary"
-              className="font-medium"
+              variant="bordered"
+              className="border-ink bg-white font-bold"
+              startContent={!regenerate.isPending && <Refresh />}
               isLoading={regenerate.isPending}
               onPress={() => regenerate.mutate({ id: viewing.id })}
             >
               {regenerate.isPending ? "Regenerating…" : "Regenerate with current résumé"}
             </Button>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted">
               Updated your résumé? Refresh this application in place.
             </span>
           </div>
-          {regenerate.error && (
-            <div className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-              {regenerate.error.message}
-            </div>
-          )}
+          {regenerate.error && <Notice>{regenerate.error.message}</Notice>}
           <BundleView
             app={viewing}
             editable
@@ -262,93 +249,69 @@ export function Generator() {
       )}
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-gray-500">
-          Past applications
-        </h2>
         {past.isPending ? (
           <RowsSkeleton />
-        ) : past.data && past.data.length > 0 ? (
-          <Card className="border border-gray-100" shadow="none">
-            <ul className="divide-y divide-gray-100">
-              {past.data.map((a) => {
-                const active = viewing?.id === a.id;
+        ) : (
+          <Board title="Past applications" busy={running}>
+            {past.data && past.data.length > 0 ? (
+              past.data.map((a, i) => {
                 // Rows may now be pending/failed with no bundle (SPEC §2 v10) — label + guard.
                 const label = a.bundle
                   ? a.bundle.roleTitle
                   : a.status === "failed"
                     ? "Generation failed"
                     : "Generating…";
-                const openable = !!a.bundle;
                 return (
-                  <li
+                  <BoardRow
                     key={a.id}
-                    className={`flex items-center gap-2 px-4 ${active ? "bg-indigo-50" : ""}`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => openable && setViewing(a)}
-                      disabled={!openable}
-                      className="flex-1 py-3 text-left disabled:cursor-default"
-                    >
-                      <p
-                        className={`font-medium ${a.status === "failed" ? "text-danger" : "text-gray-900"}`}
+                    index={i}
+                    when={a.createdAt}
+                    role={label}
+                    fit={a.bundle?.fitAnalysis?.overallFit}
+                    status={a.status}
+                    active={viewing?.id === a.id}
+                    onOpen={a.bundle ? () => setViewing(a) : undefined}
+                    actions={
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        className="text-flap-dim data-[hover=true]:bg-frame data-[hover=true]:text-stop-on-dark"
+                        aria-label={`Delete ${label}`}
+                        onPress={() => setToDelete(a)}
                       >
-                        {label}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(a.createdAt).toLocaleString()}
-                      </p>
-                    </button>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      aria-label={`Delete ${label}`}
-                      onPress={() => setToDelete(a)}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.75"
-                        strokeLinecap="round"
-                        className="h-4 w-4"
-                        aria-hidden
-                      >
-                        <path d="M6 6l12 12M18 6L6 18" />
-                      </svg>
-                    </Button>
-                  </li>
+                        <Cross />
+                      </Button>
+                    }
+                  />
                 );
-              })}
-            </ul>
-          </Card>
-        ) : (
-          <p className="text-sm text-gray-500">
-            Nothing yet — generate your first application above.
-          </p>
+              })
+            ) : (
+              <BoardEmpty>Nothing yet — generate your first application above.</BoardEmpty>
+            )}
+          </Board>
         )}
       </section>
 
       <Modal isOpen={!!toDelete} onClose={() => setToDelete(null)} size="sm">
         <ModalContent>
-          <ModalHeader>Delete application?</ModalHeader>
+          <ModalHeader className="font-extrabold">Delete application?</ModalHeader>
           <ModalBody>
-            <p className="text-sm text-gray-600">
+            <p className="text-muted">
               This removes the application for{" "}
-              <span className="font-medium text-gray-900">
+              <span className="font-bold text-ink">
                 {toDelete?.bundle?.roleTitle ?? "this job"}
               </span>{" "}
               from your list.
             </p>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={() => setToDelete(null)}>
+            <Button variant="light" className="font-bold" onPress={() => setToDelete(null)}>
               Cancel
             </Button>
             <Button
               color="danger"
+              className="font-bold"
               isLoading={del.isPending}
               onPress={() => toDelete && del.mutate({ id: toDelete.id })}
             >

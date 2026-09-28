@@ -1,15 +1,77 @@
+/*
+ * DIRECTION CONTRACT — Terminal Wayfinding (see DESIGN.md)
+ * THESIS: a job application read like an airport junction — "where do I stand, what's
+ *   next" answered in one glance. Refuses the indigo-gradient AI-tool card stack.
+ * OWN-WORLD: sign-yellow bands, sign-black type and pictogram squares, white reading
+ *   panels on concourse gray, Atkinson Hyperlegible, a black split-flap departures board.
+ * STORY: the user sees their fit as a gate number, each requirement as a signed
+ *   decision (✓ / ◐ / ✕ with its résumé evidence), then follows the plan route to the gate.
+ * FIRST VIEWPORT: yellow band; monumental headline + sign-up left; the example fit sign
+ *   (gate-number score, verdict rows) right; primary action = black "Sign up" button.
+ * FORM: challenger "terminal-yellow-wayfinding" (user-chosen over grounded #5 card
+ *   catalog), staging: evidence transect (every verdict pinned to evidence). Seed 15a2c0de.
+ */
 @import "tailwindcss";
 @plugin "./hero.ts";
 @source "../../../node_modules/@heroui/theme/dist/**/*.{js,ts}";
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-sans: "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-sign-yellow: #ffcc00;
+  --color-sign-yellow-press: #f0bd00;
+  --color-ink: #0b0b0b;
+  --color-frame: #1a1a1a;
+  --color-concourse: #efefec;
+  --color-surface-gray: #e6e6e6;
+  --color-ink-soft: #2b2b2b;
+  --color-muted: #555555;
+  --color-on-yellow-muted: #4a3b00;
+  --color-rule: #c9c9c4;
+  --color-flap: #ffcc00;
+  --color-flap-dim: #8a8a84;
+  --color-stop: #c8102e;
+  --color-stop-on-dark: #ff6b7d;
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   body {
-    @apply bg-gray-50 text-gray-900;
-    background-image: radial-gradient(55rem 40rem at 50% -16rem, theme(colors.indigo.100), transparent);
+    @apply bg-concourse font-sans text-ink;
     min-height: 100vh;
+  }
+  ::selection {
+    background: var(--color-sign-yellow);
+    color: var(--color-ink);
+  }
+}
+
+/* Split-flap: a board cell flips into place when its value changes (keyed remount). */
+@keyframes flap {
+  0% {
+    transform: perspective(300px) rotateX(-88deg);
+    opacity: 0.3;
+  }
+  65% {
+    transform: perspective(300px) rotateX(10deg);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+.flap {
+  display: inline-block;
+  transform-origin: 50% 0;
+  animation: flap 360ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flap {
+    animation: none;
   }
 }

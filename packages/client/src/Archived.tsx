@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Button,
-  Card,
   Modal,
   ModalBody,
   ModalContent,
@@ -12,9 +11,10 @@ import { Link, Navigate } from "@tanstack/react-router";
 import type { Application } from "@jdlearn/shared";
 import { authClient } from "./auth";
 import { trpc } from "./trpc";
-import { Header } from "./Header";
+import { Header, NavLink } from "./Header";
 import { BundleView } from "./BundleView";
 import { RowsSkeleton } from "./Skeletons";
+import { ArrowLeft, Board, BoardRow } from "./sign";
 
 export function Archived() {
   const { data: session, isPending } = authClient.useSession();
@@ -52,80 +52,81 @@ export function Archived() {
     <div className="min-h-screen">
       <Header
         right={
-          <Button as={Link} to="/" size="sm" variant="light">
-            ← Back
-          </Button>
+          <NavLink to="/">
+            <ArrowLeft /> Back
+          </NavLink>
         }
       />
-      <main className="mx-auto max-w-3xl px-6 pb-20">
-        <section className="py-8">
-          <h1 className="text-3xl font-bold tracking-tight">Archived applications</h1>
-          <p className="mt-3 text-gray-500">Applications you've deleted.</p>
+      <main className="mx-auto max-w-3xl px-4 pb-20 sm:px-6">
+        <section className="pb-6 pt-10">
+          <h1 className="text-3xl font-extrabold tracking-tight">Archived applications</h1>
+          <p className="mt-2 text-muted">Applications you've deleted.</p>
         </section>
 
         {isPending || (session && archived.isPending) ? (
           <RowsSkeleton />
         ) : !session ? (
-          <p className="text-gray-500">
-            Please <Link to="/" className="text-indigo-600">sign in</Link>.
+          <p className="text-muted">
+            Please{" "}
+            <Link to="/" className="font-bold text-ink underline decoration-2 underline-offset-2">
+              sign in
+            </Link>
+            .
           </p>
         ) : archived.data && archived.data.length > 0 ? (
-          <div className="space-y-8">
-            <Card className="border border-gray-100" shadow="none">
-              <ul className="divide-y divide-gray-100">
-                {archived.data.map((a) => (
-                  <li
-                    key={a.id}
-                    className={`flex items-center gap-2 px-4 ${viewing?.id === a.id ? "bg-indigo-50" : ""}`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setViewing(a)}
-                      className="flex-1 py-3 text-left"
-                    >
-                      <p className="font-medium text-gray-900">
-                        {a.bundle?.roleTitle ??
-                          (a.status === "failed" ? "Generation failed" : "Generating…")}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Deleted {a.deletedAt ? new Date(a.deletedAt).toLocaleString() : "—"}
-                      </p>
-                    </button>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="primary"
-                      isLoading={restore.isPending && restore.variables?.id === a.id}
-                      onPress={() => restore.mutate({ id: a.id })}
-                    >
-                      Restore
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      onPress={() => setToPurge(a)}
-                    >
-                      Permanently delete
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </Card>
+          <div className="space-y-10">
+            <Board title="Archived">
+              {archived.data.map((a, i) => (
+                <BoardRow
+                  key={a.id}
+                  index={i}
+                  when={a.deletedAt ?? a.createdAt}
+                  role={
+                    a.bundle?.roleTitle ??
+                    (a.status === "failed" ? "Generation failed" : "Generating…")
+                  }
+                  fit={a.bundle?.fitAnalysis?.overallFit}
+                  status="archived"
+                  active={viewing?.id === a.id}
+                  onOpen={() => setViewing(a)}
+                  actions={
+                    <div className="flex shrink-0 flex-col items-end gap-1 py-2 sm:flex-row sm:items-center">
+                      <Button
+                        size="sm"
+                        variant="bordered"
+                        className="border-flap-dim font-sans font-bold text-white data-[hover=true]:border-flap data-[hover=true]:text-flap"
+                        isLoading={restore.isPending && restore.variables?.id === a.id}
+                        onPress={() => restore.mutate({ id: a.id })}
+                      >
+                        Restore
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="light"
+                        className="font-sans font-bold text-stop-on-dark data-[hover=true]:bg-frame"
+                        onPress={() => setToPurge(a)}
+                      >
+                        Permanently delete
+                      </Button>
+                    </div>
+                  }
+                />
+              ))}
+            </Board>
             {viewing && <BundleView app={viewing} />}
           </div>
         ) : (
-          <p className="text-sm text-gray-500">Nothing archived.</p>
+          <p className="text-sm text-muted">Nothing archived.</p>
         )}
       </main>
 
       <Modal isOpen={!!toPurge} onClose={() => setToPurge(null)} size="sm">
         <ModalContent>
-          <ModalHeader>Permanently delete?</ModalHeader>
+          <ModalHeader className="font-extrabold">Permanently delete?</ModalHeader>
           <ModalBody>
-            <p className="text-sm text-gray-600">
+            <p className="text-muted">
               Permanently delete the application for{" "}
-              <span className="font-medium text-gray-900">
+              <span className="font-bold text-ink">
                 {toPurge?.bundle?.roleTitle ?? "this job"}
               </span>
               .
@@ -133,11 +134,12 @@ export function Archived() {
             </p>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={() => setToPurge(null)}>
+            <Button variant="light" className="font-bold" onPress={() => setToPurge(null)}>
               Cancel
             </Button>
             <Button
               color="danger"
+              className="font-bold"
               isLoading={purge.isPending}
               onPress={() => toPurge && purge.mutate({ id: toPurge.id })}
             >
