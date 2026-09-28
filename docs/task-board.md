@@ -17,6 +17,16 @@ _None._
 _None._
 
 ## Done
+- **T-023 — visual redesign: Terminal Wayfinding** (2026-09-28, solo track). Replaced the
+  indigo/violet "clean-light" HeroUI look (read as generic AI styling) with an airport
+  sign-system world: yellow sign band, sign-black pictogram squares, Atkinson Hyperlegible
+  (Google Fonts), monumental fit score, verdicts by pictogram + word (no color-only), plan as
+  a route ending at a yellow capstone "gate", application lists as a black split-flap
+  departures board (flip on status change, reduced-motion safe). New `sign.tsx` primitives;
+  HeroUI kept but re-themed (`hero.ts`). DESIGN.md + `.impeccable/design.json` rewritten.
+  UI-only: no schema, server, or behavior change. Gate PASS (--no-boot). Verified in browser
+  (landing, empty/no-résumé, bundle, board states, archived, résumé builder) with a local
+  test account + synthetic Mongo rows.
 - **T-021 — async generation (durable job, non-blocking UI)** (2026-08-14, full track, SPEC
   v10). Generation moved OFF the tRPC request path so a mid-flight refresh/close no longer loses
   work or double-spends Anthropic. `Application` gains a `status` (`pending|done|failed`,

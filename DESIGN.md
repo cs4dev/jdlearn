@@ -2,345 +2,251 @@
 name: jdlearn
 description: Turn a job post into proof — a fit map, cover letter, and learning plan from your real résumé.
 colors:
-  primary: "#4f46e5"
-  primary-strong: "#4338ca"
-  accent-violet: "#8b5cf6"
-  accent-indigo-bright: "#6366f1"
-  tint-50: "#eef2ff"
-  tint-100: "#e0e7ff"
+  sign-yellow: "#ffcc00"
+  sign-yellow-press: "#f0bd00"
+  sign-black: "#0b0b0b"
+  panel-frame: "#1a1a1a"
+  concourse: "#efefec"
+  surface-gray: "#e6e6e6"
   surface: "#ffffff"
-  page: "#f9fafb"
-  ink: "#111827"
-  ink-soft: "#1f2937"
-  muted: "#4b5563"
-  muted-soft: "#6b7280"
-  faint: "#6b7280"
-  hairline: "#f3f4f6"
-  divider: "#e5e7eb"
-  on-primary: "#ffffff"
-  verdict-match: "#17c964"
-  verdict-partial: "#f5a524"
-  verdict-gap: "#f31260"
+  ink: "#0b0b0b"
+  ink-soft: "#2b2b2b"
+  muted: "#555555"
+  on-yellow-muted: "#4a3b00"
+  rule: "#c9c9c4"
+  flap-text: "#ffcc00"
+  flap-dim: "#8a8a84"
+  stop-red: "#c8102e"
+  stop-red-on-dark: "#ff6b7d"
 typography:
   display:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "clamp(2.25rem, 5vw, 3rem)"
+    fontFamily: "Atkinson Hyperlegible Next, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "clamp(2.75rem, 6vw, 4.5rem)"
+    fontWeight: 800
+    lineHeight: 0.98
+    letterSpacing: "-0.03em"
+  gate-number:
+    fontFamily: "{typography.display.fontFamily}"
+    fontSize: "clamp(3.5rem, 9vw, 5.5rem)"
+    fontWeight: 800
+    lineHeight: 0.9
+    letterSpacing: "-0.04em"
+  headline:
+    fontFamily: "{typography.display.fontFamily}"
+    fontSize: "1.875rem"
     fontWeight: 800
     lineHeight: 1.1
     letterSpacing: "-0.02em"
-  headline:
-    fontFamily: "{typography.display.fontFamily}"
-    fontSize: "1.5rem"
-    fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: "-0.02em"
   title:
     fontFamily: "{typography.display.fontFamily}"
-    fontSize: "1.125rem"
-    fontWeight: 600
-    lineHeight: 1.3
+    fontSize: "1.25rem"
+    fontWeight: 700
+    lineHeight: 1.2
     letterSpacing: "-0.01em"
   body:
     fontFamily: "{typography.display.fontFamily}"
-    fontSize: "0.875rem"
+    fontSize: "1rem"
     fontWeight: 400
-    lineHeight: 1.625
+    lineHeight: 1.55
     letterSpacing: "normal"
-  label:
+  small:
     fontFamily: "{typography.display.fontFamily}"
-    fontSize: "0.75rem"
-    fontWeight: 600
-    lineHeight: 1.4
-    letterSpacing: "0.05em"
-  mono:
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
     fontSize: "0.875rem"
     fontWeight: 400
-    lineHeight: 1.5
+    lineHeight: 1.45
     letterSpacing: "normal"
+  flap:
+    fontFamily: "Atkinson Hyperlegible Mono, ui-monospace, monospace"
+    fontSize: "0.875rem"
+    fontWeight: 600
+    lineHeight: 1.3
+    letterSpacing: "0.12em"
 rounded:
-  md: "8px"
-  lg: "12px"
-  card: "14px"
-  full: "9999px"
+  sm: "3px"
+  md: "6px"
 spacing:
   xs: "8px"
   sm: "12px"
   md: "16px"
   lg: "24px"
-  xl: "32px"
+  xl: "40px"
 components:
+  sign-band:
+    backgroundColor: "{colors.sign-yellow}"
+    textColor: "{colors.sign-black}"
+    padding: "16px 24px"
   button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    rounded: "{rounded.lg}"
-    typography: "{typography.body}"
-    padding: "0 16px"
-  button-flat:
-    backgroundColor: "{colors.tint-100}"
-    textColor: "{colors.primary}"
-    rounded: "{rounded.lg}"
-    padding: "0 12px"
-  button-light:
-    backgroundColor: "transparent"
-    textColor: "{colors.muted}"
-    rounded: "{rounded.lg}"
-    padding: "0 12px"
-  button-bordered:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink-soft}"
-    rounded: "{rounded.lg}"
-    padding: "0 16px"
-  card:
-    backgroundColor: "{colors.surface}"
-    rounded: "{rounded.card}"
-    padding: "24px"
-  input-bordered:
+    backgroundColor: "{colors.sign-black}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.sm}"
+    height: "44px"
+  button-secondary:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.lg}"
-    padding: "8px 12px"
-  chip-verdict:
-    backgroundColor: "{colors.tint-50}"
-    textColor: "{colors.primary}"
-    rounded: "{rounded.full}"
-    padding: "2px 8px"
+    rounded: "{rounded.sm}"
+    height: "40px"
+  pictogram:
+    backgroundColor: "{colors.sign-black}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.sm}"
+    size: "32px"
+  panel:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.md}"
+    padding: "24px"
+  flap-board:
+    backgroundColor: "{colors.sign-black}"
+    textColor: "{colors.flap-text}"
+    typography: "{typography.flap}"
+    rounded: "{rounded.md}"
 ---
 
 # Design System: jdlearn
 
 ## Overview
 
-**Creative North Star: "The Evidence Desk"**
+**Creative North Star: "Terminal Wayfinding"**
 
-jdlearn is a workspace for turning a claim into proof. The visitor arrives with a
-job description and a history, and the interface's whole job is to lay the two
-side by side and render a verdict — match, partial, gap — then build the paperwork
-from it. So the surface behaves like a calm analyst's desk: a single centered
-column of white document-surfaces on a soft gray page, warmed by one faint indigo
-glow bleeding down from above the fold, as if a desk lamp were on. Nothing shouts.
-The chrome recedes so the reasoning — the fit map, the letter, the plan — is the
-only thing with color and weight.
+A job search is a connection with a clock on it. jdlearn is built like an international
+airport sign system: saturated yellow sign panels, black humanist type, white pictograms
+on black inset squares, and numbers at monumental scale. Each screen answers the two
+questions a traveller asks at a junction: *where do I stand* and *what is next*. The fit
+score is the gate number; each JD requirement is a decision point; the learning plan is
+the route to the gate; past applications are the departures board.
 
-This is an **Operate** surface: the user is completing a task under
-application-fatigue pressure, so scanability and trust outrank expression. Density
-is generous, not cramped — sections breathe on 32px rhythm, cards carry a single
-hairline border instead of heavy shadow, and hierarchy is carried by weight and an
-uppercase micro-label rather than by boxes and rules. The brand lives in the
-precise details: the tracked section labels, the indigo eyebrow above the role
-title, the arrow that trails every forward action, the numbered indigo coins of
-the learning plan.
-
-The palette is deliberately narrow: one indigo accent, a full gray neutral ramp,
-and three semantic verdict colors that appear *only* on fit chips. Color is
-evidence here, not decoration — a splash of green or red means the system reached a
-conclusion, never that a designer wanted contrast.
+This is an **Operate** surface for tired people. The sign system exists precisely so a
+fatigued stranger reads the right answer in one glance, so legibility is the identity:
+high contrast, sentence case, one message per line, no decoration. Yellow is loud by
+nature, so it is rationed: it marks wayfinding only (the top band, the fit sign, the
+route's destination, the active drop target) and everything you read at length sits on
+white panels over a pale concourse gray.
 
 **Key Characteristics:**
-- Single centered document column on a warm-gray page with one indigo overhead glow.
-- Flat by default: hairline borders (`#f3f4f6`) do the work shadows usually do.
-- One indigo accent + full gray ramp; verdict colors reserved for fit judgments.
-- Hierarchy from weight + uppercase tracked micro-labels, not from heavy containers.
-- Quiet, system-font typography; monospace only where the user pastes raw JD text.
+- Full-bleed yellow sign band on every page; concourse-gray floor; white reading panels.
+- Black inset pictogram squares carry verdicts, arrows, and actions — never color alone.
+- Atkinson Hyperlegible throughout; monumental gate-number numerals for the fit score.
+- Past applications as a black split-flap departures board in yellow mono caps.
+- Sentence case everywhere except the flap board. No tracked-uppercase eyebrows.
 
 ## Colors
 
-A disciplined one-accent palette: indigo carries every interactive and brand
-moment, grays carry all structure and text, and three semantic colors are held in
-reserve for the fit verdict and error states.
-
 ### Primary
-- **Desk Indigo** (`#4f46e5`): The single brand accent. Solid primary buttons, the
-  focus ring, the overall-fit score, active-row tint, the eyebrow above the role
-  title, links, and the learning-plan resources. This is the only chromatic voice
-  in the standard UI.
-- **Indigo Pressed** (`#4338ca`): The darker step for hover/active on primary
-  surfaces.
-
-### Secondary
-- **Bright Indigo** (`#6366f1`) and **Signal Violet** (`#8b5cf6`): Used *only* as
-  the two stops of the logo/identity gradient (top-left → bottom-right) and the
-  small perk-icon coins on the landing page. Not for UI chrome.
+- **Sign Yellow** (`#ffcc00`): wayfinding only — the header band, the fit sign, the
+  capstone flag at the end of the plan route, the active drop zone, hover on sign-band
+  links. Never a hero or page-section fill. Never a button fill in reading areas, never decoration.
+- **Sign Black** (`#0b0b0b`): all type, primary buttons, pictogram insets, frames, focus
+  rings, the flap board ground.
 
 ### Neutral
-- **Ink** (`#111827`): Primary text, headings, emphasized inline words.
-- **Ink Soft** (`#1f2937`): Body copy inside document surfaces (cover letter).
-- **Muted** (`#4b5563`) / **Muted Soft** (`#6b7280`): Supporting sentences,
-  descriptions, summaries.
-- **Faint** (`#6b7280`): Micro-labels, timestamps, secondary hints, "/ 100". Raised
-  from `#9ca3af` so the signature tracked label clears WCAG AA (~4.6:1 on white);
-  it now coincides with Muted Soft, which is intentional — the faint step was below
-  the contrast floor and had to come up.
-- **Page** (`#f9fafb`): The app background, and the recessed cover-letter panel.
-- **Surface** (`#ffffff`): Every card and elevated document.
-- **Hairline** (`#f3f4f6`): The default card border and list dividers — the workhorse edge.
-- **Divider** (`#e5e7eb`): Slightly stronger rules (the auth "or" separator, `<Divider>`).
-- **Tints** (`#eef2ff` / `#e0e7ff`): Indigo washes for the fit chips, plan coins,
-  the "add your résumé" prompt card, and flat-button fills.
+- **Concourse** (`#efefec`): the page floor under the band.
+- **Surface** (`#ffffff`): every reading panel (letter, plan, forms, rows).
+- **Surface Gray** (`#e6e6e6`): recessed fields, skeleton fill, hover on white rows.
+- **Rule** (`#c9c9c4`): 1px panel borders and dividers on white/concourse.
+- **Ink Soft** (`#2b2b2b`) / **Muted** (`#555555`): body and supporting text on white.
+- **On-Yellow Muted** (`#4a3b00`): supporting text on yellow (tinted from the hue, ≥7:1).
+- **Flap Text** (`#ffcc00`) / **Flap Dim** (`#8a8a84`): flap board type on black.
 
-### Tertiary — Verdict colors (reserved)
-- **Match Green** (`#17c964`), **Partial Amber** (`#f5a524`), **Gap Red** (`#f31260`):
-  The three fit statuses, as flat HeroUI chips. Gap Red doubles as the error/danger
-  color (destructive actions, error toasts on a `danger-50` wash).
+### Tertiary
+- **Stop Red** (`#c8102e`): errors and destructive actions only (the "no entry" sign).
+  **Stop Red on Dark** (`#ff6b7d`) is its flap-board form (FAILED, Permanently delete) —
+  `#c8102e` fails contrast on black.
 
 ### Named Rules
-**The Evidence-Only Color Rule.** Green, amber, and red appear *only* as a fit
-verdict or a system error — never as decoration, category tags, or emphasis. If a
-color that isn't indigo or gray shows up, it must mean the system reached a
-conclusion.
-
-**The One-Accent Rule.** Indigo is the sole brand hue. Don't introduce a second
-decorative accent; reach for weight, size, or a gray step before reaching for a new color.
+**The Wayfinding-Only Rule.** Yellow means "this tells you where you are or where to go
+next." If a yellow surface doesn't orient, it's decoration — make it white.
+**The Pictogram Rule.** Verdicts and states are carried by pictogram shape and a word
+(✓ Match, ◐ Partial, ✕ Gap); color never carries meaning on its own.
 
 ## Typography
 
-**Display / Body Font:** System UI stack (`ui-sans-serif, system-ui, -apple-system,
-Segoe UI, Roboto, …`). No web font is loaded — the tool favors instant paint and a
-native, unbranded neutrality over a typographic signature.
-**Mono Font:** System monospace stack (`ui-monospace, SFMono-Regular, Menlo, …`),
-used exclusively for the JD paste area, where the user is handling raw source text.
-
-**Character:** Quiet and functional. Personality comes from *how* the scale is used
-— tight negative tracking on large headings, and a distinctive uppercase, wide-tracked
-micro-label — not from the letterforms themselves.
+**Font:** Atkinson Hyperlegible Next (Braille Institute's legibility-engineered humanist
+sans), weights 400–800. **Mono:** Atkinson Hyperlegible Mono — the flap board, the raw JD
+paste field, and nothing else.
 
 ### Hierarchy
-- **Display** (800, `clamp(2.25rem → 3rem)`, tight `-0.02em`): The landing hero only
-  — "Turn a job post into proof." with "proof." set in indigo.
-- **Headline** (700, ~1.5rem, `-0.02em`): The signed-in H1 and the role title in a bundle.
-- **Title** (600–700, 1.125–1.25rem): Card headings — "Add your résumé first",
-  "Welcome back".
-- **Body** (400, 0.875rem, `line-height 1.625`): The default. Descriptions, summaries,
-  the cover letter, fit-requirement text. Cover-letter prose runs relaxed for reading.
-- **Label** (600, 0.75rem, uppercase, `letter-spacing 0.05em`, color Faint): The
-  signature. Section headers ("Fit for this role", "Cover letter", "Learning plan",
-  "Past applications") and the indigo "Tailored for" eyebrow.
-- **Mono** (400, 0.875rem): JD textarea input only.
+- **Display** (800, clamp 2.75→4.5rem, lh 0.98, -0.03em): landing headline only.
+- **Gate number** (800, clamp 3.5→5.5rem, -0.04em): the fit score. Monumental on purpose.
+- **Headline** (800, 1.875rem): page H1 and the role title.
+- **Title** (700, 1.25rem): section headings, sentence case.
+- **Body** (400, 1rem, lh 1.55): default; cover letter capped at ~68ch.
+- **Small** (400, 0.875rem): evidence, timestamps, hints.
+- **Flap** (mono 600, 0.875rem, uppercase, 0.12em): departures board only.
 
 ### Named Rules
-**The Tracked-Label Rule.** Every section is introduced by an uppercase,
-wide-tracked, 12px label in Faint gray (or indigo for the role eyebrow) — never by a
-bold sentence-case heading. This micro-label is the system's typographic signature;
-keep it consistent across every new section.
+**The Sentence-Case Rule.** Signs speak in sentence case, one message per line. Uppercase
+tracking lives only on the flap board, where it is the board's native grammar.
 
 ## Layout
 
-A single centered reading column, never a full-bleed dashboard. Containers step by
-role: `max-w-3xl` (768px) for the working app, `max-w-4xl` (896px) for the header
-and the two-column landing split, `max-w-sm` (384px) for the auth card. Horizontal
-gutters are a constant `24px` (`px-6`).
+A single working column (`max-w-3xl`, 768px) under a full-bleed sign band whose content
+aligns to a wider `max-w-6xl` rail. Gutters 16px mobile / 24px desktop. Sections stack on
+40px; panel interiors 24px; related lines 8–12px.
 
-Vertical rhythm is deliberate: major sections stack on a `32px` (`space-y-8`)
-cadence; card interiors use `16–32px` gaps; related items (chip ↔ text, coin ↔
-step) sit `12px` apart. The signed-out landing is a two-column grid on `md+` (pitch
-left, auth card right) that collapses to a single centered stack on mobile.
-
-The page carries one atmospheric element: a large soft **radial indigo glow**
-(`radial-gradient(55rem 40rem at 50% -16rem, indigo-100, transparent)`) bleeding
-down from above the top edge onto the gray page — the desk lamp. It is the only
-background treatment; the rest is flat `#f9fafb`.
+The landing is one screen on desktop (no scroll at ≥768px tall), on concourse gray under
+the yellow band — never a yellow hero (too loud). Row 1: the headline with a black
+"proof." plate, and the intro paragraph bottom-aligned in the right column. Row 2, on the
+same 1.25fr / 1fr grid: the example fit map (rows stretched) and the black-framed sign-up
+panel, sharing top and bottom edges. The example must stay realistic for its role (a
+frontend role's gap is a frontend skill). Mobile stacks headline → example → sign-up.
 
 ## Elevation & Depth
 
-**Flat by default, bordered for structure.** This system almost never uses shadow to
-separate surfaces — it uses a single hairline border (`1px #f3f4f6`) and the white/gray
-surface contrast. Primary document cards carry HeroUI `shadow="sm"` as a barely-there
-lift; nested cards (a fit-requirement row inside the bundle, the past-applications
-list) drop to `shadow="none"` and rely on border + tint alone. Depth is layered, not
-lifted.
-
-### Shadow Vocabulary
-- **Rest lift** (`shadow-sm`, HeroUI `sm`): The only ambient shadow — top-level cards
-  and the logo coin. Signals "this is a document," not "this is floating."
-
-### Named Rules
-**The Hairline-First Rule.** To separate two surfaces, add a `#f3f4f6` border before
-you add a shadow. Nested surfaces get border only (`shadow="none"`). A second stacked
-shadow is a smell — flatten it.
+Flat, like printed polycarbonate. Surfaces separate by value (yellow / white / concourse /
+black) and 1px rules, never by shadow. The only depth is the 2px black frame on the fit
+sign and focused/active controls — a sign's aluminium frame.
 
 ## Shapes
 
-Soft, generous corners with no sharp edges anywhere. The radius vocabulary:
-`8px` (buttons, error/notice boxes, the logo tile), `12px` (the recessed cover-letter
-panel), `~14px` (HeroUI cards, the primary containers), and full-round (`9999px`) for
-the verdict chips, the numbered learning-plan coins, and the small gradient perk
-icons. Circles carry status and sequence (the plan's 1-2-3 coins, the "G" auth
-badge); rounded rectangles carry documents. Borders are always `1px` and hairline —
-there are no thick strokes, no dividers heavier than `1px`.
+Near-square: 3px on buttons, pictograms and inputs; 6px on panels and the board. Pictogram
+insets are true squares. No pills, no circles except inside a pictogram glyph.
 
 ## Components
 
+### Sign band (header)
+Full-bleed yellow, 1px black bottom rule. Logo pictogram + wordmark left; text links
+right (black, 600). Active route = black fill, yellow text.
+
 ### Buttons
-- **Shape:** Rounded (`~12px`), medium weight label, compact height; `size="sm"` is the
-  common size in dense areas (nav, card actions).
-- **Primary:** Solid Desk Indigo (`#4f46e5`) on white text — the one high-emphasis
-  action per view (Generate, Sign in, Add your résumé). Forward actions carry a
-  trailing **→** (`endContent`); this arrow is a brand motif, not decoration.
-- **Flat:** Indigo text on an indigo-100 wash — secondary in-context actions (Copy,
-  Edit, Regenerate).
-- **Light:** Transparent, muted-gray text — the quietest tier, used for header nav
-  (Résumé, Archived, Sign out) and Cancel.
-- **Bordered:** White with a hairline border — neutral alternates like "Continue with
-  Google."
-- **Hover / State:** Indigo deepens toward `#4338ca`; disabled fades; `isLoading`
-  swaps the label to a present-tense gerund ("Generating…", "Saving…").
+- **Primary:** black fill, white 600 text, 3px radius, 44px tall; forward actions lead
+  with an inset arrow square (white outline). Hover dims slightly (HeroUI opacity); loading
+  swaps the label to a gerund ("Generating…").
+- **Secondary:** white, 2px black border, black text; trailing chevron for navigation.
+- **Quiet:** text-only black, underline on hover — nav, Cancel.
+- **Danger:** Stop Red text or fill, only for delete/purge.
 
-### Cards / Containers
-- **Corner Style:** ~14px (HeroUI large).
-- **Background:** White surface; the "add your résumé" prompt uses an `indigo-50/40`
-  tint with an `indigo-100` border to read as a gentle nudge.
-- **Shadow Strategy:** `shadow="sm"` for primary cards, `shadow="none"` for nested —
-  see Elevation.
-- **Border:** Always `1px` hairline (`#f3f4f6`).
-- **Internal Padding:** `20–24px` (`p-5`/`p-6`); body gaps `16–32px`.
+### Fit sign (signature)
+Yellow panel with 2px black frame. Left: "Fit for this role" + gate-number score + "/ 100". Right: role,
+verdict counts, summary. Below: requirement rows on white — a black pictogram square
+(✓ / ◐) or a dashed-outline square (✕ for gaps) + requirement + résumé evidence prefixed
+"From your résumé". Gap rows use a dashed rule: a closed route, shown as closed.
 
-### Inputs / Fields
-- **Style:** HeroUI `variant="bordered"`, outside-placed label, ~12px radius. The JD
-  textarea overrides the input font to **monospace** to signal raw source text.
-- **Focus:** Indigo focus ring (`#4f46e5`).
-- **Error:** Message in Gap Red; form-level errors sit in a `danger-50` washed box
-  with `8px` corners.
+### Section heads
+A small black pictogram square + title, over a 2px ink rule (Cover letter, Learning plan).
 
-### Chips (Fit verdicts)
-- **Style:** HeroUI `variant="flat"`, colored by status (Match green / Partial amber /
-  Gap red), full-round, `12px` label.
-- **Layout quirk:** Fixed `w-16`, centered content, so the three verdicts align in a
-  tidy left gutter down the requirements list — the fit map reads like a checklist.
+### Plan route
+Numbered black squares joined by a 2px vertical route line; the capstone project is a
+black-framed white panel at the end of the line, whose last stop is a yellow flag square labelled "Capstone project" (the only yellow);
+the panel hangs below the flag at full column width.
 
-### Navigation
-- **Style:** A minimal top bar (`max-w-4xl`, `py-5`): logo coin + wordmark left,
-  `light` (ghost) buttons right. No background, no border — it floats on the page glow.
+### Departures board
+Black panel, mono flap cells: date · role · fit · status in caps, the role in sentence
+case for legibility. Fit folds under the time on phones. Columns: (READY / GENERATING /
+FAILED / DELETED). A status change flips the cell (rotateX, 360ms, reduced-motion → instant).
 
-### Signature Components
-- **The Fit Map:** The hero component. An overall-fit score (large indigo number `/ 100`),
-  a one-line summary, then a `match → partial → gap` sorted list of requirement rows,
-  each a bordered shadow-none card pairing a fixed-width verdict chip with the JD
-  requirement and its résumé evidence (or gap note). This is where the product's value
-  is visible; give it primacy in any bundle layout.
-- **The Learning-Plan Coin:** Numbered ordered steps, each led by a `24px` full-round
-  `indigo-100 / indigo-700` coin bearing its index — sequence made tactile.
-- **The Indigo Eyebrow:** A `12px` uppercase indigo micro-label ("Tailored for") sitting
-  directly above the role title — the one place the tracked label goes indigo instead of gray.
+### Inputs
+White, 2px `#c9c9c4` border → black on focus, 3px radius, label above in 600.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** introduce every section with the uppercase, wide-tracked 12px Faint label (The
-  Tracked-Label Rule).
-- **Do** reach for a hairline `#f3f4f6` border before a shadow; give nested surfaces
-  border only (The Hairline-First Rule).
-- **Do** keep indigo as the sole brand accent and let gray weight carry hierarchy (The
-  One-Accent Rule).
-- **Do** trail forward/primary actions with the **→** motif, and swap button labels to a
-  present-tense gerund while loading.
-- **Do** keep the single centered column and the one overhead indigo glow; add breathing
-  room on the `32px` section rhythm.
-- **Do** set raw JD input in monospace; keep everything else in the system sans.
+- **Do** answer "where do I stand / what's next" first on every screen.
+- **Do** pair every verdict or state with a pictogram and a word.
+- **Do** keep long reading on white panels at ≤68ch.
+- **Do** use the flap board for lists of applications, and only there.
 
 ### Don't:
-- **Don't** use green, amber, or red for anything but a fit verdict or a system error
-  (The Evidence-Only Color Rule).
-- **Don't** stack shadows or box every section — flat, bordered surfaces are the identity.
-- **Don't** introduce a web font or a second decorative accent color; the neutrality is intentional.
-- **Don't** replace a tracked micro-label with a bold sentence-case heading.
-- **Don't** widen the app past its centered reading column into a full-bleed dashboard grid.
+- **Don't** use yellow for anything that doesn't orient (Wayfinding-Only Rule).
+- **Don't** reintroduce indigo, violet, gradients, glows, or soft shadows.
+- **Don't** set tracked uppercase eyebrows over sections.
+- **Don't** use mono for anything but the flap board and the raw JD field.
+- **Don't** round panels past 6px or turn chips into pills.

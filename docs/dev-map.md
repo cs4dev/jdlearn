@@ -44,8 +44,11 @@ packages/
   during generation), `BundleView.tsx`, `FitMap.tsx` (the shared JD↔résumé fit map —
   score + verdict rows — rendered by both `BundleView` and `Home`'s landing sample so the
   demo can't drift from the real result), `Archived.tsx`, `ResumeBuilder.tsx`
-  (`/resume`), `NotFound.tsx`, `Header.tsx`, `Logo.tsx`, `Skeletons.tsx`, `trpc.ts`
-  (typed client, type-only server import).
+  (`/resume`), `NotFound.tsx`, `Header.tsx` (yellow sign band + `NavLink`/`NavButton`),
+  `Logo.tsx`, `Skeletons.tsx`, `sign.tsx` (sign-system primitives: pictogram glyphs,
+  `Picto`, `Notice`, and the split-flap `Board`/`BoardRow` used by Generator + Archived),
+  `trpc.ts` (typed client, type-only server import). Visual system: root `DESIGN.md`
+  ("Terminal Wayfinding"); tokens in `index.css` `@theme` + HeroUI theme in `hero.ts`.
 
 ## Conventions
 - Add a procedure: define it in `server/src/trpc.ts` under `appRouter`; the client picks
